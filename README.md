@@ -1,67 +1,87 @@
-# Kryptic-Agent: Autonomous Cybernetic Edge Engine
+# Golden-Agent
 
-An advanced, enterprise-grade autonomous software framework designed for high-speed edge AI, active inference processing, and real-time robotics automation.
+An advanced, production-grade autonomous agent framework engineered for bare-metal edge execution, proactive environment orchestration, and real-time telemetry-driven loop throttling. **Golden-Agent** combines resilient persistence systems, C++ accelerated bridging, and dynamic telemetry tracking to deliver private, highly privileged agency on local Linux architectures.
 
-## 🪐 Architecture Overview
+---
 
-Kryptic-Agent implements a multi-layered cybernetic runtime loop that bridges high-level cognitive orchestration with native hardware acceleration:
+## ⚡ Core Architecture Pillars
 
+* **Dynamic Telemetry & Loop Throttling:** Real-time optimization adjusting agent loop cycles dynamically based on hardware power, battery status, and thermals via integrated hardware providers.
+* **C++ Acceleration Bridge:** High-performance low-level integration layers optimizing computational density and core agent throughput during complex processing states.
+* **FastAPI Streaming Interface:** Sub-millisecond event streaming and command broadcast system designed to operate locally without external cloud dependencies.
+* **Resilient Encrypted Persistence:** Enterprise-grade secure storage layer utilizing cryptographic persistence structures for local long-term memory protection.
+* **Privileged Edge Execution:** Engineered exclusively to maximize native bare-metal OS capabilities, process isolation, and direct low-level system communication.
+
+---
+
+## 🛠️ Tech Stack & Dependencies
+
+* **Runtime Environment:** Python 3.10+ / Native Linux OS (Bare-metal privileged)
+* **Core Framework:** FastAPI / Uvicorn (Event-driven streaming infrastructure)
+* **Acceleration:** C++17 native extensions via compile-time bridge wrappers
+* **Telemetry Engine:** Custom Linux `/sys/class/` hardware monitoring provider
+* **Validation & Security:** Pytest automation suite / SHA256 integrity verification layers
+
+---
+
+## 📂 Repository Structure
+
+```text
+├── agent_core.py                 # Central execution matrix and agent loop control
+├── main.py                       # High-privilege entry point and routing manager
+├── os_telemetry_provider.py      # Real-time hardware performance metrics provider
+├── patchpilot.py                 # Automated code updates, syntax verification, and patching
+├── tests/
+│   └── test_suites.py            # Comprehensive pytest automation suites
+├── commercial/
+│   └── kryptic_edge_launch.py    # Production deployment and path-injection configuration
+└── scripts/
+    ├── package_release.sh        # Automated build, compression, and verification automation
+    └── setup_symlinks.sh         # Resilient persistence and symlink structuring setup
 ```
-┌────────────────────────────────────────────────────────┐
-│               Cognitive & AI Orchestration             │
-│   (unified_conscious_agent.py & kryptic_agent_core.py) │
-└───────────────────────────┬────────────────────────────┘
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│            Workspace Context & API Engine              │
-│       (workspace_cognitive_bridge.py / FastAPI)        │
-└───────────────────────────┬────────────────────────────┘
-                            ▼
-┌────────────────────────────────────────────────────────┐
-│             Low-Level Hardware Acceleration            │
-│         (kryptic_hardware_accelerator.cpp)             │
-└────────────────────────────────────────────────────────┘
-```
 
-*   **Cognitive Orchestration:** Self-contained, active inference loops that handle continuous tracking and autonomous behavioral adjustments.
-*   **Robotics Integration:** Real-time state management, sensor-to-actuator control loops, and high-frequency edge telemetry.
-*   **Hardware Acceleration:** Native C++ matrix bindings compiled with high optimization flags (`-O3`) to run latency-critical tensor math directly on local computing resources.
-*   **Security & Compliance:** Runtime payload deobfuscation, strict key rotation protocols, and automated database replication ledgers.
-
-## 🛠️ Tech Stack & Requirements
-
-*   **Runtime Environments:** Python 3.10+, Native C++17 Compiler (`g++`), Docker
-*   **Core Dependencies:** FastAPI, Uvicorn, Pytest, Cryptography, SQLite3
-*   **CI/CD Infrastructure:** GitHub Actions, Termux deployment support, Maturin toolchains
+---
 
 ## 🚀 Getting Started
 
-### 1. Build Native Acceleration Binary
-Compile the high-speed C++ matrix engine using CMake or manual build flags:
+### Prerequisites
+
+Golden-Agent is architected for **native Linux bare-metal setups** requiring system administrative paths.
+
+* Python 3.10 or higher
+* G++ compiler supporting C++17 standard
+* Direct read access to hardware telemetry streams (e.g., `/sys/`)
+
+### Installation & Compilation
+
+Execute the consolidated deployment sequence to prepare environment structures, compile high-speed libraries, and run target checks:
 
 ```bash
-g++ -O3 -std=c++17 -Wall -Wextra -Werror kryptic_hardware_accelerator.cpp -o matrix_accelerator
-chmod +x matrix_accelerator
-```
+# Clone the repository
+git clone https://github.com
+cd Golden-Agent
 
-### 2. Initialize and Run Local Workspace
-Install requirements, initialize database parameters, and spin up the telemetry dashboard:
+# Setup system environment and resilience structures
+chmod +x scripts/setup_symlinks.sh scripts/package_release.sh
+./scripts/setup_symlinks.sh
 
-```bash
+# Install primary distribution packages
 pip install -r requirements.txt
-python kryptic_hardware_launch.py
+
+# Run integrated test suites to verify telemetry and FastAPI pipes
+pytest tests/
 ```
 
-### 3. Run Validation Tests
-Verify environment sanity and validate network hot-swap routines via `pytest`:
+### Launch Sequence
+
+To initialize the primary node with active system paths injected:
 
 ```bash
-export PYTHONPATH=PYTHONPATH:(pwd)
-pytest tests/ -v
+python commercial/kryptic_edge_launch.py
 ```
 
-## 📊 Commercialization & Governance
+---
 
-The repository includes localized templates for structural business operations:
-*   **`generate_llc12_manifest.py`:** Automates corporate registry compilation guidelines for single-member LLC formations.
-*   **`DOCS_GRANT_STRATEGY.md`:** Strategic outlines for non-dilutive federal and institutional research grant applications.
+## 🔒 Governance & Enterprise Integration
+
+Golden-Agent includes built-in licensing boundaries, commercial compliance scripts, and automated deployment architectures designed to protect underlying proprietary code while supporting customized commercial edge builds. Refer to `DOCS_COMMERCIALIZATION.md` for distribution guidelines and white-label scaling procedures.
