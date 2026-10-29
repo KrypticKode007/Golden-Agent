@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  kryptic-agent-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kryptic_agent_runtime
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - ENV_STATE=STAGING
+      - DATABASE_URL=sqlite:////app/data/robotic_sentience.db
+    volumes:
+      - ./persistent_data:/app/data
+      - ./logs:/app/logs
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  validation-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: kryptic_validation_suite
+    environment:
+      - PYTHONPATH=/app
+    volumes:
+      - .:/app
+    command: ["pytest", "tests/", "-v"]
+    profiles:
+      - test
+      
