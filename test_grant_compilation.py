@@ -1,45 +1,43 @@
 #!/usr/bin/env python3
 """
-Kryptic-Agent: Grant Compilation Integrity Tests
-Validates threshold boundaries, structure compilation rules, and environmental criteria.
+Kryptic-Agent: Compliance Asset Integrity Validation Suite
 """
 
 import pytest
 import os
-from generate_grant_proposal import GrantProposalCompiler
+import json
+from generate_llc12_manifest import EntityManifestGenerator
 
 @pytest.fixture
-def compiler_instance():
-    test_output = "TEST_GRANT_PROPOSAL.md"
-    yield GrantProposalCompiler(output_path=test_output)
-    # Clean up test artifact outputs following assertion completion
-    if os.path.exists(test_output):
-        os.remove(test_output)
+def manifest_engine():
+    return EntityManifestGenerator(
+        business_name="Krypticsoundz LLC",
+        location="Dinuba, California"
+    )
 
-def test_telemetry_extraction_compliance(compiler_instance):
-    """Verify that extracted operational values fall inside expected grant baseline bounds."""
-    metrics = compiler_instance.fetch_live_telemetry_metrics()
-    assert metrics["node_id"] == "KRYPTIC_EDGE_NODE_01"
-    assert metrics["verified_latency_ms"] < compiler_instance.performance_targets["max_allowable_latency_ms"]
-    assert metrics["security_epoch_valid"] is True
+def test_manifest_schema_parameters(manifest_engine):
+    """Confirm the corporate blueprint correctly maps necessary grant alignment fields."""
+    blueprint = manifest_engine.assemble_corporate_blueprint()
+    
+    assert blueprint["entity_legal_name"] == "Krypticsoundz LLC"
+    assert "Dinuba" in blueprint["primary_location"]
+    assert blueprint["manifest_metadata"]["sam_purpose_of_registration"] == "ALL_AWARDS"
+    assert "541" in blueprint["naics_industry_classification"]
 
-def test_proposal_structural_generation(compiler_instance):
-    """Verify that compiled document content contains critical verification text blocks."""
-    proposal_text = compiler_instance.compile_technical_proposal()
-    assert "Live Phase I Feasibility Proof" in proposal_text
-    assert "KrypticKode007/Golden-Agent" in proposal_text
-    assert "HMAC-SHA256" in proposal_text
-    assert "0.412 ms" in proposal_text
-
-def test_compilation_failure_on_latency_breach(compiler_instance):
-    """Assert that the compilation pipeline aborts safely if latency parameters exceed targets."""
-    # Force a breach simulation into the runtime metrics method
-    compiler_instance.fetch_live_telemetry_metrics = lambda: {
-        "node_id": "BREACHED_TEST_NODE",
-        "verified_latency_ms": 2.45,  # Exceeds the 1.0ms performance boundary
-        "security_epoch_valid": True,
-        "current_state": "LATENCY_OVERLOAD"
-    }
-    with pytest.raises(ValueError, match="Staging latency limits breach technical grant thresholds"):
-        compiler_instance.compile_technical_proposal()
-  
+def test_manifest_file_writing_boundary(manifest_engine):
+    """Verify that file exports output clean, readable JSON records."""
+    test_filename = "test_llc12_output.json"
+    
+    try:
+        exported_path = manifest_engine.export_manifest_asset(filename=test_filename)
+        assert os.path.exists(exported_path)
+        
+        with open(exported_path, "r") as f:
+            parsed_data = json.load(f)
+            
+        assert parsed_data["entity_legal_name"] == "Krypticsoundz LLC"
+        assert parsed_data["governance_structure"]["member_type"] == "Manager-Managed"
+    finally:
+        if os.path.exists(test_filename):
+            os.remove(test_filename)
+            
