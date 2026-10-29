@@ -1,29 +1,16 @@
-# Benchmarks
+# Documentation Index
 
-Reproducible latency and jitter measurements for Golden-Agent.
+| Document | Purpose |
+|----------|---------|
+| `capabilities_statement.md` | One-page capabilities statement for program managers |
+| `GRANT_ROADMAP.md` | Step-by-step plan from registrations to Phase I submission |
+| `DOCS_COMMERCIALIZATION.md` | Commercialization overview |
+| `dual_use_commercialization_plan.md` | Dual-use plan |
+| `DOCS_GRANT_STRATEGY.md` | Grant strategy |
+| `DOCS_GRANT_BUDGET.md` | Grant budget |
+| `phase_i_technical_milestones.md` | Phase I technical milestones |
+| `quantified_performance_metrics.md` | Measured performance results |
+| `project_abstract.pdf` | Project abstract |
 
-## Run
-
-```bash
-# 1. Sanity check the harness itself
-python benchmarks/latency_bench.py --target builtin:noop
-
-# 2. Benchmark the real loop (after wiring benchmarks/targets.py)
-python benchmarks/latency_bench.py \
-    --target benchmarks.targets:tick \
-    --iterations 100000 \
-    --warmup 5000
-
-# 3. Measure behavior under CPU load (exercises loop throttling)
-python benchmarks/latency_bench.py \
-    --target benchmarks.targets:tick \
-    --load-workers 4
-```
-
-Results are written to `benchmarks/results/` as JSON and Markdown.
-
-## Reporting rules
-
-- Publish p50, p99, and max, never only the average.
-- Record the hardware and OS alongside every number.
-- Copy final numbers into `docs/quantified_performance_metrics.md`.
+The files from `DOCS_COMMERCIALIZATION.md` onward are moved here by
+`repo_cleanup.sh` from the repository root.
