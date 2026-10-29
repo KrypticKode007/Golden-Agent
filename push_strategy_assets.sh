@@ -30,14 +30,16 @@ if [ "$current_branch" != "$TARGET_BRANCH" ]; then
     git checkout "$TARGET_BRANCH"
 fi
 
-# 2. Local File Presence Verification
+# 2. Local File Presence Verification (Updated Asset Matrix)
 print_status "Validating strategic funding assets tracking status..."
 declare -a core_assets=(
     "commercial/strategy/dual_use_commercialization_plan.md"
     "commercial/strategy/quantified_performance_metrics.md"
     "commercial/strategy/phase_i_technical_milestones.md"
+    "commercial/strategy/project_abstract.md"
     "commercial/strategy/budget_calculator.py"
     "commercial/strategy/generate_grant_proposal.py"
+    "generate_abstract.py"
     "tests/test_grant_milestones.py"
     ".github/workflows/grant_ci.yml"
 )
@@ -59,6 +61,9 @@ fi
 if [ -f "commercial/strategy/generate_grant_proposal.py" ]; then
     python3 -m py_compile commercial/strategy/generate_grant_proposal.py
 fi
+if [ -f "generate_abstract.py" ]; then
+    python3 -m py_compile generate_abstract.py
+fi
 
 # 4. Commit and Distribution Isolation
 if git diff --cached --quiet; then
@@ -67,9 +72,9 @@ if git diff --cached --quiet; then
 fi
 
 print_status "Staging signed commit snapshot..."
-git commit -m "feat(commercial): integrate Phase I grant framework, technical milestones, and automated validation suite"
+git commit -m "feat(commercial): integrate Phase I technical abstract, commercialization framework, and updated asset pipeline tracking"
 
 print_status "Pushing synchronized assets securely to remote tracking origin: $TARGET_BRANCH"
 git push origin "$TARGET_BRANCH"
 
-print_status "Distribution sequence completed successfully. Strategy metrics are now live on GitHub."
+print_status "Distribution sequence completed successfully. All strategy metrics are now live on GitHub."
