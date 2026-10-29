@@ -1,0 +1,8 @@
+# Save the milestone testing script into your verification paths
+cat << 'EOF' > tests/test_grant_milestones.py
+# [Pasted python script text goes here]
+EOF
+
+# Execute pytest to verify execution latency and hardware provider outputs
+pytest tests/test_grant_milestones.py -v
+  
