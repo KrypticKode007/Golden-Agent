@@ -1,52 +1,36 @@
-# ==============================================================================
-# STAGE 1: Build high-speed C++ native acceleration binaries
-# ==============================================================================
-FROM ubuntu:22.04 AS cpp-builder
+# Base environment using optimized minimal Python footprint
+FROM python:3.10-slim
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Prevent Python from writing pyc files and buffering stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
+# Install basic toolchains required for C++ native compilation
 RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     make \
-    cmake \
-    ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /build
-
-COPY kryptic_hardware_accelerator.cpp .
-
-# Compile using strict production optimization flags
-RUN g++ -O3 -std=c++17 -Wall -Wextra -Werror kryptic_hardware_accelerator.cpp -o matrix_accelerator \
-    && chmod +x matrix_accelerator
-
-# ==============================================================================
-# STAGE 2: Final runtime environment with correct module paths
-# ==============================================================================
-FROM python:3.10-slim AS runtime
-
-# Align PYTHONPATH context across modules
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH="/app:${PYTHONPATH:-}"
-
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
     sqlite3 \
     libsqlite3-dev \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# Set up runtime application tree
+WORKDIR /app
 
-# Copy the native accelerator from Stage 1
-COPY --from=cpp-builder /build/matrix_accelerator /app/matrix_accelerator
+# Copy dependency records first to optimize container caching
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy remaining framework source files
+# Copy active repository assets
 COPY . /app/
 
-EXPOSE 8000
+# Build native performance libraries inside container space
+RUN if [ -f "kryptic_hardware_accelerator.cpp" ]; then \
+        g++ -O3 -shared -fPIC kryptic_hardware_accelerator.cpp -o libkryptic_core.so; \
+    fi
 
-CMD ["python", "kryptic_edge_launch.py"]
+# Set executable flags for pipeline scripts
+RUN chmod +x run_pipeline.sh
+
+# Bootstrap the automated pipeline directly upon image activation
+CMD ["./run_pipeline.sh"]
