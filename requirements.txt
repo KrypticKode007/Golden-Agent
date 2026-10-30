@@ -1,19 +1,5 @@
-# ==============================================================================
-# Golden-Agent Framework Core Dependency Manifest
-# Branch: commercial/strategy-funding
-# ==============================================================================
-
-# Core Orchestration & High-Speed API Engines
-fastapi==0.110.0
-uvicorn==0.28.0
-requests==2.31.0
-
-# Cryptographic Persistence & State Verification Matrix
-cryptography==42.0.5
-
-# Hardware Telemetry Simulation & System Bounds Profiling
-psutil==5.9.8
-
-# Quality Assurance & Phase I Milestone Validation Testing
-pytest==8.1.1
-pytest-mock==3.14.0
+# Consolidated Requirements for Unified Edge Agent
+numpy>=1.24.0
+psutil>=5.9.0
+pytest>=7.0.0
+# Native components (ctypes, sqlite3, os) use standard library modules
