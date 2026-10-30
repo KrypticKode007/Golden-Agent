@@ -1,0 +1,8 @@
+{
+  "name": "Golden-Agent Aegis Telemetry Dashboard",
+  "description": "Offline autonomous drone and edge agent runtime with real-time hardware loop latency tracking, telemetry persistence, performance benchmarking, and telemetry streaming.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    background-color: #030712;
+    color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom scrollbars for cybernetic terminal aesthetic */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* CRT scanline effect (subtle) */
+.crt-overlay {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+}
+
+/* Glow effects */
+.glow-green {
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+.glow-blue {
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+.glow-amber {
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+}
