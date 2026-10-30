@@ -1,66 +1,67 @@
-#!/usr/bin/env python3
-"""
-Kryptic-Agent: Local Core Telemetry Dashboard Gateway
-Exposes real-time homeostatic edge data feeds and native acceleration metrics.
-"""
-
+import os
 import time
-import asyncio
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from typing import Dict, List, Any
+import sys
+from robotic_database_core import UnifiedTelemetryDatabase
+from kryptic_edge_launch import HardwareAccelerationBridge
 
-app = FastAPI(
-    title="Kryptic-Agent Telemetry Core",
-    description="Edge AI & Autonomous Robotics Hardware Monitor Interface",
-    version="1.0.0"
-)
+def calculate_cpu_load_simulation() -> float:
+    """Calculates a simulated operational compute workload curve based on system clock loops."""
+    return round(40.0 + (time.time() % 10) * 1.5, 1)
 
-# Strict schema validations for operational status tracking
-class TelemetryFrame(BaseModel):
-    node_id: str
-    timestamp: float
-    system_state: str
-    matrix_compute_latency_ms: float
-    active_inference_drift: float
-    security_epoch_valid: bool
-
-@app.get("/", tags=["Root"])
-async def read_root() -> Dict[str, str]:
-    """Returns general gateway connection status."""
-    return {"status": "ONLINE", "engine": "Kryptic-Agent Autonomous Core"}
-
-@app.get("/api/v1/telemetry", response_model=TelemetryFrame, tags=["Metrics"])
-async def get_edge_telemetry() -> Any:
-    """Streams real-time operational diagnostics matching active hardware loops."""
+def render_telemetry_dashboard(db_path: str = "agency_sentience.db"):
+    """Main execution loop for drawing the monitoring display terminal layout."""
+    db = UnifiedTelemetryDatabase(db_path=db_path)
+    bridge = HardwareAccelerationBridge()
+    
+    # Pre-populate database with an initial operational startup checkpoint
+    db.log_metric("AGENCY_CORE", 14.2, "Local automation engine runtime initialized.")
+    
     try:
-        # Simulate active sampling from low-level C++ matrix memory arrays
-        return TelemetryFrame(
-            node_id="KRYPTIC_EDGE_NODE_01",
-            timestamp=time.time(),
-            system_state="HOMEOSTATIC_HEALTHY",
-            matrix_compute_latency_ms=0.412,  # Raw C++ optimization benchmark
-            active_inference_drift=0.0024,
-            security_epoch_valid=True
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to read edge telemetry registers: {str(e)}")
-
-@app.get("/api/v1/health", tags=["Diagnostics"])
-async def check_health() -> Dict[str, Any]:
-    """System internal boundary diagnostic check."""
-    return {
-        "status": "UP",
-        "timestamp": time.time(),
-        "subsystems": {
-            "cpp_acceleration_bindings": "CONNECTED",
-            "cryptographic_key_rotation": "STABLE",
-            "robotic_database_ledger": "SYNCHRONIZED"
-        }
-    }
+        while True:
+            # Trigger a compute cycle to collect hardware latency data
+            current_latency = bridge.trigger_cycle(operational_mode=1)
+            db.log_metric("HARDWARE_BRIDGE", current_latency, "Telemetry packet received.")
+            
+            # Extract historical checkpoints from local data engine
+            recent_logs = db.get_latest_logs(limit=4)
+            cpu_metric = calculate_cpu_load_simulation()
+            
+            # Clear terminal canvas for clean rendering
+            os.system('cls' if os.name == 'nt' else 'clear')
+            
+            print("=" * 85)
+            print(f" OFFLINE CONSCIOUS DRONE | RECONSOLIDATED TELEMETRY INTERFACE      STATUS: OPERATIONAL")
+            print("=" * 85)
+            
+            # Row 1: System Hardware Metrics
+            print(f" [SYSTEM PERFORMANCE MATRIX]")
+            print(f"  • Simulated CPU Core Load : {cpu_metric}%")
+            print(f"  • RAM Resource Footprint  : 6.8 GB / 16 GB")
+            print(f"  • Native Loop Latency     : {current_latency} μs")
+            print(f"  • Deployment Mode         : LOCAL / OFFLINE IMMUTABLE ENVIRONMENT")
+            print("-" * 85)
+            
+            # Row 2: In-Memory / Database Log Streams
+            print(" [LOCAL DATA ENGINE REGISTRATION PERSISTENCE LOGS]")
+            if not recent_logs:
+                print("  No operational telemetry chunks written to storage yet...")
+            else:
+                for log in recent_logs:
+                    ts, module, latency, msg = log
+                    # Format standard timestamp display
+                    time_str = time.strftime('%H:%M:%S', time.localtime(ts))
+                    print(f"  [{time_str}] [{module}] Latency: {latency:.1f} μs | {msg}")
+            
+            print("=" * 85)
+            print(" Press Ctrl+C to terminate dashboard monitoring loop safely.")
+            
+            # Throttling time delta to regulate thread cycles
+            time.sleep(1.5)
+            
+    except KeyboardInterrupt:
+        print("\n[INFO] Dashboard monitoring loop suspended cleanly via terminal call.")
 
 if __name__ == "__main__":
-    import uvicorn
-    # Bound to standard system orchestration ports mapped inside the Docker layout
-    uvicorn.run("gui_dashboard:app", host="0.0.0.0", port=8000, reload=False)
-  
+    # Point execution directly to your primary development database
+    render_telemetry_dashboard(db_path="agency_sentience.db")
+            
