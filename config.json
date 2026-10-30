@@ -1,0 +1,17 @@
+{
+  "system": {
+    "deployment_mode": "OFFLINE_LOCAL",
+    "debug_logging": false,
+    "loop_throttle_seconds": 1.5
+  },
+  "database": {
+    "db_path": "agency_sentience.db",
+    "connection_timeout_seconds": 5.0,
+    "max_retry_attempts": 3
+  },
+  "hardware_bridge": {
+    "library_path": "./libkryptic_core.so",
+    "fallback_latency_micros": 14.2,
+    "max_allowed_latency_micros": 50.0
+  }
+}
