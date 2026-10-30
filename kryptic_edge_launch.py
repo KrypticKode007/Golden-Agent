@@ -3,6 +3,18 @@ import os
 import sys
 import logging
 from typing import Optional
+import json
+import os
+
+def load_system_config(config_path="config.json"):
+    """Reads persistent runtime thresholds safely from the configuration file."""
+    if os.path.exists(config_path):
+        with open(config_path, "r") as file:
+            return json.load(file)
+    
+    # Fail-safe defaults if file is unreadable or missing
+    return {"hardware_bridge": {"library_path": "./libkryptic_core.so", "fallback_latency_micros": 14.2}}
+    
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
