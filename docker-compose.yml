@@ -1,37 +1,20 @@
 version: '3.8'
 
 services:
-  kryptic-agent-core:
+  edge-agent-monolith:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: kryptic_agent_runtime
-    restart: unless-stopped
-    ports:
-      - "8000:8000"
-    environment:
-      - PYTHONPATH=/app
-      - ENV_STATE=STAGING
-      - DATABASE_URL=sqlite:////app/data/robotic_sentience.db
+    container_name: kryptic_edge_runtime
     volumes:
-      - ./persistent_data:/app/data
-      - ./logs:/app/logs
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  validation-runner:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: kryptic_validation_suite
-    environment:
-      - PYTHONPATH=/app
-    volumes:
+      # Map database paths to preserve monitoring telemetry across boots
       - .:/app
-    command: ["pytest", "tests/", "-v"]
-    profiles:
-      - test
-      
+      # Create an isolation volume mount point for your sister repo logic loops
+      - ../Offline-Conscious-Drone-:/app/Offline-Conscious-Drone-
+    environment:
+      - PYTHONUNBUFFERED=1
+      - OPERATIONAL_MODE=1
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    
