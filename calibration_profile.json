@@ -1,0 +1,15 @@
+{
+  "active_profile": "STRESS_TESTING",
+  "profiles": {
+    "STANDARD": {
+      "matrix_loop_bounds": 5000,
+      "collection_interval_seconds": 1.5,
+      "enforce_strict_memory_isolation": false
+    },
+    "STRESS_TESTING": {
+      "matrix_loop_bounds": 250000,
+      "collection_interval_seconds": 0.5,
+      "enforce_strict_memory_isolation": true
+    }
+  }
+}
