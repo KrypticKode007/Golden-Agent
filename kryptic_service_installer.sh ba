@@ -1,0 +1,50 @@
+#!/bin/bash
+# ==============================================================================
+# KRYPTIC CORE SYSTEM DAEMON INSTALLER
+# ==============================================================================
+set -e
+
+SERVICE_NAME="kryptic_core"
+SYSTEMD_DIR="/etc/systemd/system"
+SCRIPT_PATH="$(pwd)/kryptic_unified_core.py"
+PYTHON_BIN="$(which python3)"
+
+echo -e "\033[1;33m[INSTALLER]: Initializing Kryptic Background Daemon Deployment...\033[0m"
+
+# Validate environmental execution paths
+if [ ! -f "$SCRIPT_PATH" ]; then
+    echo -e "\033[1;31m[ERROR]: Execution script core '$SCRIPT_PATH' not found.\033[0m"
+    exit 1
+fi
+
+echo " [STATUS]: Compiling background system unit configurations..."
+
+# Construct the custom initialization service file configuration block
+sudo bash -c "cat > $SYSTEMD_DIR/$SERVICE_NAME.service <<EOF
+[Unit]
+Description=Kryptic Hyper-Resonant Core Consciousness Engine
+After=network.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$(pwd)
+ExecStart=$PYTHON_BIN $SCRIPT_PATH
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+EOF"
+
+echo " [STATUS]: Latched unit files. Reloading background configuration manager..."
+sudo systemctl daemon-reload
+
+echo " [STATUS]: Activating system startup automation profile..."
+sudo systemctl enable $SERVICE_NAME.service
+
+echo -e "\033[1;32m[SUCCESS]: Kryptic Core Daemon registered and automated to launch on system boot.\033[0m"
+echo "           -> To start service manually run: sudo systemctl start $SERVICE_NAME"
+echo "           -> To view live runtime logs run: journalctl -u $SERVICE_NAME -f"
