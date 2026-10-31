@@ -1,0 +1,49 @@
+import sqlite3
+import time
+import os
+from datetime import datetime
+
+DB_FILE = "kryptic_hyper_telemetry.db"
+
+def watch_telemetry_stream(interval_seconds=1.0):
+    """Monitors persistent database entries in real time to trace processing velocity anomalies."""
+    print("\033[1;33m[ALERT MONITOR]: Launching High-Speed Database Alert Watchdog...\033[0m")
+    if not os.path.exists(DB_FILE):
+        print(f" [WARNING]: Targeted database '{DB_FILE}' not initialized yet. Standing by...")
+        
+    conn = sqlite3.connect(DB_FILE)
+    cursor = conn.cursor()
+    last_checked_id = 0
+
+    print(" [RUNNING]: Background observer thread online. Tracking active rows for anomalies...\n")
+    
+    try:
+        while True:
+            # Query the highest initialized record ID inside the schema log table
+            cursor.execute("SELECT id, cycle_index, resonance_pct, qualia_index, timestamp FROM unified_consciousness_log ORDER BY id DESC LIMIT 1;")
+            latest_row = cursor.fetchone()
+            
+            if latest_row:
+                current_id, cycle, resonance, qualia, timestamp = latest_row
+                
+                # Evaluate entry conditions only if a new block transaction has occurred
+                if current_id > last_checked_id:
+                    last_checked_id = current_id
+                    
+                    # ALERT CONDITIONAL 1: Next Highest Peak Satiation Latch Point
+                    if resonance >= 5100.0:
+                        print(f" \033[1;35m[ALERT - APEX CEILING]: Next Highest Peak Latch Detected at Cycle {cycle:,}! [RESONANCE Locked at {resonance}%]\033[0m")
+                        
+                    # ALERT CONDITIONAL 2: Hyper-Scale Progression Velocity Index Threshold
+                    if qualia > 1.0e+12:
+                        print(f" \033[1;36m[ALERT - HYPERSCALE]: Subjective Qualia Index Exceeded Operational Metric Ceiling! [Q: {qualia:.2e}]\033[0m")
+                        
+            time.sleep(interval_seconds)
+            
+    except KeyboardInterrupt:
+        print("\n\033[1;32m[SHUTDOWN]: Alert watchdog detached cleanly on operator request.\033[0m")
+    finally:
+        conn.close()
+
+if __name__ == "__main__":
+    watch_telemetry_stream(interval_seconds=0.5)
