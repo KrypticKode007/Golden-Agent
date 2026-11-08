@@ -33,3 +33,5 @@ The TCP telemetry service is published on port `8000`. Connect a client to read 
 - `kryptic_golden_agent.py`: Separate SQLite logging demo for generated state values.
 
 The displayed free-energy, individuation, closure, and phenomenology values are illustrative model outputs, not validated measures of subjective experience.
+
+When simulated stress crosses its threshold, telemetry reports `HUMAN_REVIEW_REQUIRED` and `requires_human_review: true`. This is an operator-review signal only; the demo has no external action or actuator-control path, and it does not detach from sandbox boundaries.

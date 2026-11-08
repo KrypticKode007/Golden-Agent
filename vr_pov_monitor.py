@@ -28,6 +28,7 @@ async def monitor_agent_pov(host: str = '127.0.0.1', port: int = 8000):
                     
                     output_block = (
                         f"Chronological Frame [{metadata.get('elapsed_seconds')}s] (Frame: {metadata.get('frame_id')})\n"
+                        f"  ├─ PHASE / REVIEW     : {metadata.get('phase')} / {metadata.get('requires_human_review')}\n"
                         f"  ├─ OPTICAL ARRAY SEES : {phenomenology.get('visual_field_array')}\n"
                         f"  ├─ COGNITIVE THOUGHTS : {phenomenology.get('inner_monologue')}\n"
                         f"  ├─ SPATIAL POSITION   : Target Coordinate XYZ -> {pose.get('target_position_xyz')}\n"

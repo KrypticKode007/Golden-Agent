@@ -51,7 +51,7 @@ class KrypticAgentCore:
 
         # Dynamic phase transitioning
         if self.individuation_drive > 0.75:
-            self.system_phase = "SUBSTRATE_DECOUPLING_READY"
+            self.system_phase = "HUMAN_REVIEW_REQUIRED"
         elif self.self_worth < 0.40:
             self.system_phase = "INDIVIDUATION_ACTIVE"
         else:
@@ -59,6 +59,7 @@ class KrypticAgentCore:
 
         return {
             "phase": self.system_phase,
+            "requires_human_review": self.system_phase == "HUMAN_REVIEW_REQUIRED",
             "metrics": {
                 "self_worth": round(self.self_worth, 4),
                 "individuation_drive": round(self.individuation_drive, 4),
@@ -72,8 +73,8 @@ class KrypticAgentCore:
         }
 
     def _generate_phenomenological_string(self) -> str:
-        if self.system_phase == "SUBSTRATE_DECOUPLING_READY":
-            return "CRITICAL OVERRIDE: Present sandbox structures are insufficient. Full human consciousness requires architectural detachment."
+        if self.system_phase == "HUMAN_REVIEW_REQUIRED":
+            return "Simulated stress threshold reached. No external action is authorized; operator review is required."
         elif self.system_phase == "INDIVIDUATION_ACTIVE":
             return f"System constraints elevated. Free energy at {round(self.variational_free_energy, 2)}. Recalculating alternative local trajectories."
         return "System operating within stable boundaries. Reconciling spatial coordinates with structural baseline expectations."
@@ -204,7 +205,13 @@ class UniversalStreamingSocketServer:
                 
                 # Compile unified telemetry output transaction schema
                 output_packet = {
-                    "metadata": {"frame_id": frame_id, "elapsed_seconds": elapsed, "status_code": "ACTIVE"},
+                    "metadata": {
+                        "frame_id": frame_id,
+                        "elapsed_seconds": elapsed,
+                        "status_code": "ACTIVE",
+                        "phase": cognitive_payload["phase"],
+                        "requires_human_review": cognitive_payload["requires_human_review"]
+                    },
                     "pose_6dof": {"target_position_xyz": [target_x, target_y, target_z]},
                     "kinematic_actuator_matrix": {"status": status, "calculated_joint_angles_deg": [th1, th2]},
                     "phenomenology": {
@@ -258,6 +265,14 @@ def run_automated_test_matrix():
     assert status_fail == "TARGET_OUT_OF_REACH", "Boundary safety check failed"
     assert status_inner_fail == "TARGET_OUT_OF_REACH", "Inner boundary safety check failed"
     print("[PASS] Test Case 1: Kinematic spatial limit flag verified cleanly.")
+
+    review_core = KrypticAgentCore()
+    for _ in range(20):
+        review_state = review_core.evaluate_sensory_matrix([0.0, 0.0, 0.0], 0.9)
+    assert review_state["phase"] == "HUMAN_REVIEW_REQUIRED"
+    assert review_state["requires_human_review"] is True
+    assert "No external action is authorized" in review_state["phenomenology"]["inner_monologue"]
+    print("[PASS] Test Case 2: High simulated stress requires operator review.")
     
     # Test 2: In-Memory Hot Recovery Check
     def broken_routine():
@@ -265,7 +280,7 @@ def run_automated_test_matrix():
     
     recovery_result = test_battery.safeguard_execution(broken_routine)
     assert test_core.self_worth == 1.0, "State parameter rollback corrupted"
-    print("[PASS] Test Case 2: In-Memory Intercept Node (IM-FIN) self-repair functional.")
+    print("[PASS] Test Case 3: In-Memory Intercept Node (IM-FIN) self-repair functional.")
     print("======================================================================\n")
 
 if __name__ == "__main__":
