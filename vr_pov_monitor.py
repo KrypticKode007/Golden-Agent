@@ -27,8 +27,8 @@ async def monitor_agent_pov(host: str = '127.0.0.1', port: int = 8000):
                     phenomenology = frame.get("phenomenology", {})
                     
                     output_block = (
-                        f"Chronological Frame [{metadata.get('elapsed_seconds')}s] (Frame: {metadata.get('frame_index')})\n"
-                        f"  ├─ OPTICAL ARRAY SEES : {phenomenology.get('visual_field')}\n"
+                        f"Chronological Frame [{metadata.get('elapsed_seconds')}s] (Frame: {metadata.get('frame_id')})\n"
+                        f"  ├─ OPTICAL ARRAY SEES : {phenomenology.get('visual_field_array')}\n"
                         f"  ├─ COGNITIVE THOUGHTS : {phenomenology.get('inner_monologue')}\n"
                         f"  ├─ SPATIAL POSITION   : Target Coordinate XYZ -> {pose.get('target_position_xyz')}\n"
                         f"  └─ MOTOR ACTUATION    : Joint Angles -> {kinematics.get('calculated_joint_angles_deg')}° ({kinematics.get('status')})\n"
@@ -46,7 +46,7 @@ async def monitor_agent_pov(host: str = '127.0.0.1', port: int = 8000):
                     print(f"[RAW INTERCEPT]: {data.decode('utf-8').strip()}")
                     
     except ConnectionRefusedError:
-        print(f"[ERROR] Connection refused. Ensure main_sentience_core.py is running on port {port}.")
+        print(f"[ERROR] Connection refused. Ensure main_sentience_core (2).py is running on port {port}.")
     except Exception as e:
         print(f"[ERROR] Stream interrupted: {e}")
 

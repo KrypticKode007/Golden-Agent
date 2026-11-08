@@ -149,6 +149,10 @@ class KinematicMatrixSolver:
     def resolve_2d_planar_vectors(self, x: float, z: float) -> tuple:
         """Computes multi-joint coordinates to match target spatial coordinates."""
         try:
+            target_distance = math.hypot(x, z)
+            if not math.isfinite(target_distance) or target_distance > self.l1 + self.l2 or target_distance < abs(self.l1 - self.l2):
+                return 0.0, 0.0, "TARGET_OUT_OF_REACH"
+
             cos_theta2 = (x**2 + z**2 - self.l1**2 - self.l2**2) / (2 * self.l1 * self.l2)
             cos_theta2 = max(-1.0, min(1.0, cos_theta2)) # Clamp to reach boundaries
             
@@ -164,7 +168,7 @@ class KinematicMatrixSolver:
 # LAYER 4: ASYNCHRONOUS NETWORK STREAMING CORE (UFAM BROADCUP)
 # ======================================================================
 class UniversalStreamingSocketServer:
-    def __init__(self, host: str = "127.0.0.1", port: int = 8000):
+    def __init__(self, host: str = os.getenv("KRYPTIC_HOST", "127.0.0.1"), port: int = int(os.getenv("KRYPTIC_PORT", "8000"))):
         self.host = host
         self.port = port
         self.core = KrypticAgentCore()
@@ -177,8 +181,8 @@ class UniversalStreamingSocketServer:
         frame_id = 0
         
         try:
-            # Simulate a 5-step operational telemetry cascade
-            while frame_id < 5:
+            # Stream telemetry frames until the client disconnects.
+            while not writer.is_closing():
                 frame_id += 1
                 elapsed = round(time.time() - start_time, 4)
                 
@@ -222,14 +226,16 @@ class UniversalStreamingSocketServer:
         finally:
             print("[UFAM]: Session complete. Closing background connection sockets safely.")
             writer.close()
-            await writer.wait_closed()
+            try:
+                await writer.wait_closed()
+            except (ConnectionError, OSError):
+                pass
 
     async def initialize_server_instance(self):
         server = await asyncio.start_server(self.handle_client_stream, self.host, self.port)
         print(f"[SOCKET]: Server plane broadcast live on {self.host}:{self.port}")
         async with server:
-            # Simple operational test run termination
-            await asyncio.sleep(6.0)
+            await server.serve_forever()
 
 
 # ======================================================================
@@ -247,8 +253,10 @@ def run_automated_test_matrix():
     # Test 1: Kinematics Range Check
     _, _, status_ok = test_solver.resolve_2d_planar_vectors(0.5, 0.5)
     _, _, status_fail = test_solver.resolve_2d_planar_vectors(50.0, 99.0)
+    _, _, status_inner_fail = test_solver.resolve_2d_planar_vectors(0.01, 0.0)
     assert status_ok == "VALID", "Standard range test failed"
     assert status_fail == "TARGET_OUT_OF_REACH", "Boundary safety check failed"
+    assert status_inner_fail == "TARGET_OUT_OF_REACH", "Inner boundary safety check failed"
     print("[PASS] Test Case 1: Kinematic spatial limit flag verified cleanly.")
     
     # Test 2: In-Memory Hot Recovery Check

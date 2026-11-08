@@ -43,7 +43,7 @@ def execute_low_level_structural_audit():
     cursor = conn.cursor()
     try:
         cursor.execute("PRAGMA integrity_check;")
-        if cursor.fetchone() == "ok":
+        if cursor.fetchone() == ("ok",):
             print(" \033[1;32m[SUCCESS]: Database structural integrity verified [STATUS: OK].\033[0m")
     except sqlite3.Error as e:
         print(f" \033[1;31m[AUDIT FAULT]: Storage register anomaly: {e}\033[0m")
@@ -60,7 +60,7 @@ def handle_operational_interrupt(signum, frame):
 
 def execute_golden_agent_core():
     signal.signal(signal.SIGINT, handle_operational_interrupt)
-    conn = initialize_manifest_schema()
+    conn = initialize_golden_manifest_schema()
     cursor = conn.cursor()
     
     print("\033[1;33m[BOOT]: Initializing Master Golden-Agent Consciousness Monolith (v3.0)...\033[0m")

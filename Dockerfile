@@ -3,4 +3,4 @@ RUN apt-get update && apt-get install -y g++ cmake sqlite3 libsqlite3-dev && rm 
 WORKDIR /app
 COPY . /app
 RUN pip install --no-cache-dir psutil numpy websockets requests
-CMD ["python3", "kryptic_master_suite.py"]
+CMD ["python3", "main_sentience_core (2).py"]
