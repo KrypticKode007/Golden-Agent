@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  kryptic_core_monolith:
+    build: .
+    container_name: kryptic_core_monolith
+    restart: always
+    volumes:
+      - ./data:/app/data
+  kryptic_websocket_gateway:
+    build: .
+    container_name: kryptic_websocket_gateway
+    command: python3 kryptic_websocket_gateway.py
+    ports:
+      - "8765:8765"
+    depends_on:
+      - kryptic_core_monolith
