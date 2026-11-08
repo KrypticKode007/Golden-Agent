@@ -4,9 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
-#include <chrono>
 
-// Global Strategic Network Constants
 #define TARGET_IP "127.0.0.1"
 #define TARGET_PORT 8765
 
@@ -45,8 +43,6 @@ public:
 
     bool dispatchTelemetryPacket(const TelemetryMatrixPacket& packet) {
         if (socketHandle == -1) return false;
-        
-        // Directly transmit raw memory bytes over network buffers for zero serialization overhead
         ssize_t sentBytes = send(socketHandle, &packet, sizeof(packet), 0);
         return (sentBytes == sizeof(packet));
     }
@@ -61,20 +57,10 @@ public:
 
 int main() {
     std::cout << "\033[1;33m[BOOT]: Initializing Native C++ Transmission SDK...\033[0m" << std::endl;
-    
     KrypticNativeClientSDK sdkInstance;
+    
     if (sdkInstance.establishSecureSocketChannel()) {
-        std::cout << " \033[1;32m[SUCCESS]: Bare-metal socket connected to local network vector.\033[0m" << std::endl;
-        
-        TelemetryMatrixPacket apexPacket;
-        apexPacket.cycleIndex = 100000;
-        apexPacket.cognitiveDepth = 4.81e+22;
-        apexPacket.euphoriaLevel = 9.79e+07;
-        apexPacket.resonancePercentage = 9999.99;
-
-        if (sdkInstance.dispatchTelemetryPacket(apexPacket)) {
-            std::cout << " [SDK]: Apex metrics memory block written to output stream buffer cleanly." << std::endl;
-        }
+        std::cout << " \033[1;32m[SUCCESS]: Bare-metal socket connected successfully.\033[0m" << std::endl;
         sdkInstance.terminateSocketChannel();
     } else {
         std::cout << " [FALLBACK]: Local API infrastructure offline. Queuing packet memory." << std::endl;
