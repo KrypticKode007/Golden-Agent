@@ -1,0 +1,47 @@
+#!/usr/bin/env python3
+"""
+Validation Harness for Golden-Agent Core Platform Stability.
+"""
+
+import os
+import sqlite3
+import pytest
+from golden_agent.core import EpisodicMemoryBridge, AutonomousSecureSandbox
+
+@pytest.fixture
+def isolated_db(tmp_path) -> EpisodicMemoryBridge:
+    """Yields a sandboxed memory database module per validation execution block."""
+    test_db_path = tmp_path / "transient_memory.db"
+    return EpisodicMemoryBridge(str(test_db_path))
+
+def test_database_write_integrity(isolated_db):
+    bridge = isolated_db
+    bridge.store_episode("Sentinel-Alpha", "UNIT_TEST", "Trigger Input", "Trigger Output")
+    
+    history = bridge.query_recent_context(limit=1)
+    assert len(history) == 1
+    assert history[0]["agent_id"] == "Sentinel-Alpha"
+    assert history[0]["input_string"] == "Trigger Input"
+    assert history[0]["output_string"] == "Trigger Output"
+
+def test_secure_subprocess_sandbox_tracking(isolated_db, tmp_path):
+    bridge = isolated_db
+    sandbox = AutonomousSecureSandbox(bridge)
+    
+    # Write a dynamic temporary code file asset to confirm terminal telemetry hooks
+    temp_script = tmp_path / "sandbox_test.py"
+    temp_script.write_text("import sys\nprint('Execution Pipeline Fluid')\nsys.exit(0)")
+    
+    result = sandbox.execute_safely(str(temp_script))
+    assert result["status"] == "success"
+    assert result["exit_code"] == 0
+    assert "Execution Pipeline Fluid" in result["stdout"]
+    
+    # Assert transactional entry down to the localized SQL engine
+    with sqlite3.connect(bridge.db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT exit_code, stdout_payload FROM execution_sandbox_results")
+        row = cursor.fetchone()
+        assert row is not None
+        assert row[0] == 0
+        assert "Execution Pipeline Fluid" in row[1]
