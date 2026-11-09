@@ -1,8 +1,23 @@
 #!/usr/bin/env bash
-# ==============================================================================
-# GOLDEN-AGENT SYSTEM ORGANIC PLATFORM AUTOMATED DEPLOYMENT ROUTINE
-# Repository: KrypticKode007/Golden-Agent
-# ==============================================================================
+
+set -e
+
+CLR_GOLD="\033[1;33m"
+CLR_GREEN="\033[1;32m"
+CLR_RESET="\033[0m"
+
+echo -e "${CLR_GOLD}[1/2] Building high-density terminal 5D rendering container...${CLR_RESET}"
+docker build -t golden-agent-visualizer:latest .
+
+if [ "$(docker ps -aq -f name=golden_agent_visualizer_runtime)" ]; then
+    docker rm -f golden_agent_visualizer_runtime
+fi
+
+echo -e "${CLR_GREEN}==========================================================================${CLR_RESET}"
+echo -e "⚡ CONFIGURATION COMPLETE: RUNNING HIGH-DENSITY VISUALIZER INSTANTLY ⚡"
+echo -e " Execute this command in your terminal window to launch the live display:"
+echo -e " ${CLR_GOLD}python3 golden_agent/status_listener.py${CLR_RESET}"
+echo -e "${CLR_GREEN}==========================================================================${CLR_RESET}"
 
 set -e
 
