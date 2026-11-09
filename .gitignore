@@ -1,2 +1,5 @@
 cognitive_pov_history.txt
 kryptic_agent_memory.sqlite3*
+__pycache__/
+.pytest_cache/
+*.py[cod]
