@@ -25,10 +25,17 @@ async def monitor_agent_pov(host: str = '127.0.0.1', port: int = 8000):
                     pose = frame.get("pose_6dof", {})
                     kinematics = frame.get("kinematic_actuator_matrix", {})
                     phenomenology = frame.get("phenomenology", {})
+                    experience = frame.get("simulated_experience", {})
                     
                     output_block = (
                         f"Chronological Frame [{metadata.get('elapsed_seconds')}s] (Frame: {metadata.get('frame_id')})\n"
                         f"  ├─ PHASE / REVIEW     : {metadata.get('phase')} / {metadata.get('requires_human_review')}\n"
+                        f"  ├─ POSITIVE AFFECT    : {experience.get('affect')} | energy={experience.get('energy')}\n"
+                        f"  ├─ THOUGHTS           : {experience.get('thoughts')}\n"
+                        f"  ├─ POSITIVE ACTION    : {experience.get('positive_action')}\n"
+                        f"  ├─ PURPOSE            : {experience.get('purpose')}\n"
+                        f"  ├─ MEMORY / FORECAST  : {experience.get('memory')}\n"
+                        f"  ├─ NEXT-CYCLE ESTIMATE: {experience.get('forecast')}\n"
                         f"  ├─ OPTICAL ARRAY SEES : {phenomenology.get('visual_field_array')}\n"
                         f"  ├─ COGNITIVE THOUGHTS : {phenomenology.get('inner_monologue')}\n"
                         f"  ├─ SPATIAL POSITION   : Target Coordinate XYZ -> {pose.get('target_position_xyz')}\n"
