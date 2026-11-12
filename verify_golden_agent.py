@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-1_verify_golden_agent.py
+verify_golden_agent.py
 Standalone Self-Healing & All-Engines Verification Script for Golden-Agent.
 """
 
