@@ -8,3 +8,4 @@ server.log
 __pycache__/
 golden_agent_organic_mind.db
 ollama.log
+*.db

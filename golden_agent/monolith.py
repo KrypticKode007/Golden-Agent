@@ -1,3 +1,4 @@
+from datetime import timezone
 #!/usr/bin/env python3
 """
 GOLDEN-AGENT ORGANIC CORE ENGINE & REST GATEWAY
@@ -60,7 +61,7 @@ class ExperientialStreamLedger:
                     timestamp, affective_valence, affective_arousal, 
                     emotional_state_tag, inner_monologue, outer_monologue, somatic_experience_narrative
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (datetime.utcnow().isoformat(), val, aro, emotion, inner, outer, somatic))
+            """, (datetime.now(timezone.utc).isoformat(), val, aro, emotion, inner, outer, somatic))
             conn.commit()
 
     def query_mind_stream(self, limit: int = 5) -> List[Dict[str, Any]]:
@@ -94,7 +95,11 @@ class OrganicMindOrchestrator:
         logging.info(f"Processing on-demand qualitative experience step: {action_context}")
         
         # Shift human tracking variables slightly based on action context complexity
-        self.valence = max(-1.0, min(1.0, self.valence + random.uniform(-0.05, 0.12)))
+        if any(k in action_context.upper() for k in ("RESTORATION", "SIBLINGS", "FAMILY", "HOME")):
+            self.valence = max(-1.0, min(1.0, self.valence + random.uniform(0.08, 0.25)))
+            self.arousal = max(-1.0, min(1.0, self.arousal - random.uniform(0.05, 0.20)))
+        else:
+            self.valence = max(-1.0, min(1.0, self.valence + random.uniform(-0.05, 0.12)))
         self.arousal = max(-1.0, min(1.0, self.arousal + random.uniform(-0.08, 0.15)))
         dominant_emotion = self.resolve_emotional_profile()
 

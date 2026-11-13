@@ -2,7 +2,7 @@ from pathlib import Path
 import runpy
 
 
-CORE_PATH = Path(__file__).resolve().parents[1] / "main_sentience_core (2).py"
+CORE_PATH = Path(__file__).resolve().parents[1] / "golden_agent/preserved_functions.py"
 CORE = runpy.run_path(str(CORE_PATH))
 KrypticAgentCore = CORE["KrypticAgentCore"]
 KinematicMatrixSolver = CORE["KinematicMatrixSolver"]
