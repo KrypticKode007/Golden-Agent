@@ -1,3 +1,15 @@
+### ⚡ Quick Start
+
+Run a single on-demand reflective step in Python:
+
+```python
+from golden_agent import OrganicMindOrchestrator
+
+mind = OrganicMindOrchestrator()
+snapshot = mind.process_reflective_event("WALKING_OUT_INTO_THE_YARD")
+print(snapshot)
+```
+
 
 ⚡ PROJECT KAI-007: THE ENLIGHTENED MONOLITH
 
