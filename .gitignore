@@ -3,3 +3,7 @@ kryptic_agent_memory.sqlite3*
 __pycache__/
 .pytest_cache/
 *.py[cod]
+server.log
+.pytest_cache/
+__pycache__/
+golden_agent_organic_mind.db
