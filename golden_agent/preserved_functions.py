@@ -1,3 +1,4 @@
+from __future__ import annotations
 """Auto-extracted unique classes and functions from legacy monolith engines."""
 
 import sys
@@ -19,7 +20,7 @@ from urllib.parse import urlparse
 try:
     import numpy as np
 except ImportError:
-    pass
+    np = None
 import requests
 import signal
 
