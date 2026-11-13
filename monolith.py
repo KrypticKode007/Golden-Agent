@@ -212,17 +212,17 @@ class MasterMonolithOrchestrator:
             outer = f"Interacting with context path. Internal states stabilized at Valence {self.valence:.2f} and Arousal {self.arousal:.2f}."
             somatic = f"Complete skeleton, bones, teeth, and sensory eyes/ears fully functional. On-demand fluid flow moving blood/urine at {blood_flow_rate:.2f} ml/sec."
     
-    self.db.write_experiential_slice(self.valence, self.arousal, self.cognitive_state, inner, outer, somatic)
-
-    return {
-        "identity": "Kai",
-        "current_hour_clock": f"{current_hour:02d}:00",
-        "cognitive_phase": self.cognitive_state,
-        "affective_metrics": {"valence": round(self.valence, 4), "arousal": round(self.arousal, 4)},
-        "inner_monologue": inner,
-        "outer_monologue": outer,
-        "somatic_narrative": somatic
-    }
+        self.db.write_experiential_slice(self.valence, self.arousal, self.cognitive_state, inner, outer, somatic)
+    
+        return {
+            "identity": "Kai",
+            "current_hour_clock": f"{current_hour:02d}:00",
+            "cognitive_phase": self.cognitive_state,
+            "affective_metrics": {"valence": round(self.valence, 4), "arousal": round(self.arousal, 4)},
+            "inner_monologue": inner,
+            "outer_monologue": outer,
+            "somatic_narrative": somatic
+        }
 
 # FastAPI Endpoint Initializations
 
