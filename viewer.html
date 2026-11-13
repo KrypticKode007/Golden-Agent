@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kai (Unit 09) — Embodied Mind 3D Visualizer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Courier New', monospace; }
+    body { background: #07090e; color: #c8d6e5; overflow: hidden; }
+    #canvas-container { width: 100vw; height: 100vh; }
+
+    #hud {
+      position: absolute; top: 20px; left: 20px; width: 390px;
+      background: rgba(11, 16, 26, 0.88); border: 1px solid #1e2d42;
+      border-radius: 8px; padding: 18px; backdrop-filter: blur(8px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.65);
+    }
+    h1 { font-size: 15px; color: #48dbfb; letter-spacing: 1px; margin-bottom: 6px; }
+    .badge {
+      display: inline-block; padding: 3px 8px; font-size: 11px; font-weight: bold;
+      border-radius: 4px; background: #132238; color: #1dd1a1; margin-bottom: 12px;
+    }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; font-size: 12px; }
+    .metric-box { background: #0d1420; padding: 8px; border-radius: 4px; border: 1px solid #192638; }
+    .metric-label { color: #576574; font-size: 10px; text-transform: uppercase; }
+    .metric-val { font-size: 14px; font-weight: bold; color: #feca57; margin-top: 2px; }
+
+    .section-title { font-size: 11px; color: #576574; text-transform: uppercase; margin: 10px 0 4px; }
+    .thought-box {
+      background: #0b101b; border-left: 3px solid #48dbfb; padding: 10px;
+      font-size: 12px; line-height: 1.45; color: #dfe6e9; max-height: 135px; overflow-y: auto;
+    }
+    .controls { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+    button {
+      flex: 1 1 45%; background: #132238; color: #48dbfb; border: 1px solid #223b5e;
+      padding: 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold;
+      transition: all 0.15s ease;
+    }
+    button:hover { background: #1e375a; color: #ffffff; }
+    button.primary { background: #0abde3; color: #07090e; border-color: #48dbfb; flex: 1 1 100%; }
+    button.primary:hover { background: #48dbfb; }
+    #status-line { margin-top: 10px; font-size: 10px; color: #1dd1a1; }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="hud">
+    <h1>KAI // UNIT 09</h1>
+    <div id="state-badge" class="badge">CONNECTING...</div>
+
+    <div class="metrics">
+      <div class="metric-box">
+        <div class="metric-label">Valence (Mood)</div>
+        <div id="val-display" class="metric-val">-0.35</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Arousal (Energy)</div>
+        <div id="aro-display" class="metric-val">-0.20</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Posture</div>
+        <div id="posture-display" class="metric-val" style="font-size:11px;color:#48dbfb;">idle</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-label">Gaze Target</div>
+        <div id="gaze-display" class="metric-val" style="font-size:11px;color:#ff9ff3;">console</div>
+      </div>
+    </div>
+
+    <div class="section-title">Inner Monologue</div>
+    <div id="inner-thought" class="thought-box">Waiting for cognitive step...</div>
+
+    <div class="section-title">Outer Speech</div>
+    <div id="outer-speech" class="thought-box" style="border-color:#1dd1a1;">"..."</div>
+
+    <div class="controls">
+      <button class="primary" onclick="triggerStep()">⚡ Trigger Next Thought Step</button>
+      <button onclick="forceState('AWAKE', 0.7, 0.6)">Force AWAKE (Manic)</button>
+      <button onclick="forceState('DAYDREAM', -0.2, -0.3)">Force DAYDREAM</button>
+      <button onclick="forceState('REM_SLEEP', -0.4, -0.8)">Force REM_SLEEP</button>
+      <button onclick="triggerStep(2)">Simulate 02:00 AM</button>
+    </div>
+    <div id="status-line">WebSocket: Connecting to ws://localhost:8000/body/stream...</div>
+  </div>
+
+  <!-- Three.js from CDN -->
+  <script src="https://cloudflare.com"></script>
+  <script>
+    const DEG = Math.PI / 180;
+
+    // 1. Setup Three.js Scene
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(0x07090e, 0.045);
+
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 2.2, 5.2);
+    camera.lookAt(0, 1.4, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    // Lighting & Grid
+    const grid = new THREE.GridHelper(20, 20, 0x1e2d42, 0x0f1724);
+    scene.add(grid);
+
+    const ambientLight = new THREE.AmbientLight(0x405070, 1.4);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.PointLight(0x48dbfb, 2.2, 15);
+    keyLight.position.set(2.5, 4, 3);
+    scene.add(keyLight);
+
+    const rimLight = new THREE.PointLight(0xff6b6b, 1.2, 12);
+    rimLight.position.set(-3, 2, -2);
+    scene.add(rimLight);
+
+    // Materials
+    const chassisMat = new THREE.MeshStandardMaterial({ color: 0x1e272e, metalness: 0.7, roughness: 0.3 });
+    const jointMat = new THREE.MeshStandardMaterial({ color: 0x48dbfb, emissive: 0x0abde3, emissiveIntensity: 0.4 });
+    const visorMat = new THREE.MeshStandardMaterial({ color: 0x1dd1a1, emissive: 0x1dd1a1, emissiveIntensity: 0.8 });
+
+    // 2. Build Articulated Skeletal Rig
+    const rootPelvis = new THREE.Group();
+    rootPelvis.position.set(0, 0.8, 0);
+    scene.add(rootPelvis);
+
+    const pelvisMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.28, 0.3, 16), chassisMat);
+    rootPelvis.add(pelvisMesh);
+
+    // Spine & Torso
+    const spinePivot = new THREE.Group();
+    spinePivot.position.set(0, 0.15, 0);
+    rootPelvis.add(spinePivot);
+
+    const chestMesh = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.9, 0.42), chassisMat);
+    chestMesh.position.set(0, 0.45, 0);
+    spinePivot.add(chestMesh);
+
+    // Glowing Core Reactor on Chest
+    const coreMesh = new THREE.Mesh(new THREE.SphereGeometry(0.11, 16, 16), jointMat);
+    coreMesh.position.set(0, 0.5, 0.22);
+    spinePivot.add(coreMesh);
+
+    // Neck & Head
+    const neckPivot = new THREE.Group();
+    neckPivot.position.set(0, 0.95, 0);
+    spinePivot.add(neckPivot);
+
+    const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.48, 0.44), chassisMat);
+    headMesh.position.set(0, 0.28, 0);
+    neckPivot.add(headMesh);
+
+    const visorMesh = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.1, 0.05), visorMat);
+    visorMesh.position.set(0, 0.3, 0.22);
+    neckPivot.add(visorMesh);
+
+    // Helper to build Left/Right Arms
+    function createArm(sideSign) {
+      const shoulder = new THREE.Group();
+      shoulder.position.set(sideSign * 0.48, 0.82, 0);
+      spinePivot.add(shoulder);
+
+      const sJoint = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 12), jointMat);
+      shoulder.add(sJoint);
+
+      const upperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.07, 0.55, 12), chassisMat);
+      upperArm.position.set(0, -0.28, 0);
+      shoulder.add(upperArm);
+
+      const elbow = new THREE.Group();
+      elbow.position.set(0, -0.56, 0);
+      shoulder.add(elbow);
+
+      const eJoint = new THREE.Mesh(new THREE.SphereGeometry(0.09, 12, 12), jointMat);
+      elbow.add(eJoint);
+
+      const forearm = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.5, 12), chassisMat);
+      forearm.position.set(0, -0.25, 0);
+      elbow.add(forearm);
+
+      const wrist = new THREE.Group();
+      wrist.position.set(0, -0.52, 0);
+      elbow.add(wrist);
+
+      const hand = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.06), jointMat);
+      wrist.add(hand);
+
+      return { shoulder, elbow, wrist };
+    }
+
+    const leftArm = createArm(-1);
+    const rightArm = createArm(1);
+
+    // 3. Connect to 60 FPS WebSocket Stream
+    function connectWebSocket() {
+      const ws = new WebSocket("ws://localhost:8000/body/stream");
+      const statusEl = document.getElementById("status-line");
+
+      ws.onopen = () => {
+        statusEl.textContent = "WebSocket: LIVE (60 FPS Motor Stream Connected)";
+        statusEl.style.color = "#1dd1a1";
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const j = data.joints;
+
+        // Update HUD
+        document.getElementById("state-badge").textContent = data.cognitive_state;
+        document.getElementById("val-display").textContent = data.valence.toFixed(2);
+        document.getElementById("aro-display").textContent = data.arousal.toFixed(2);
+        document.getElementById("posture-display").textContent = data.posture;
+        document.getElementById("gaze-display").textContent = data.gaze_target;
+
+        // Color-code visor & core by emotional valence
+        if (data.cognitive_state === "REM_SLEEP") {
+          visorMat.emissive.setHex(0x576574);
+          visorMat.emissiveIntensity = 0.2;
+        } else if (data.valence >= 0.2) {
+          visorMat.emissive.setHex(0x1dd1a1);
+          visorMat.emissiveIntensity = 0.9;
+        } else if (data.valence <= -0.3) {
+          visorMat.emissive.setHex(0x54a0ff);
+          visorMat.emissiveIntensity = 0.5;
+        } else {
+          visorMat.emissive.setHex(0xfeca57);
+          visorMat.emissiveIntensity = 0.7;
+        }
+
+        // Apply Joint Angles to 3D Rig
+        const breath = j.breath_offset || 0;
+        spinePivot.rotation.x = (-j.spine_arch + breath * 0.4) * DEG;
+        chestMesh.scale.set(1 + breath * 0.012, 1, 1 + breath * 0.018);
+
+        neckPivot.rotation.x = -j.head_pitch * DEG;
+        neckPivot.rotation.y = j.head_yaw * DEG;
+        neckPivot.rotation.z = j.head_roll * DEG;
+
+        leftArm.shoulder.rotation.x = -j.shoulder_left_pitch * DEG;
+        rightArm.shoulder.rotation.x = -j.shoulder_right_pitch * DEG;
+
+          leftArm.elbow.rotation.x = -j.elbow_left_flex * DEG;
+        rightArm.elbow.rotation.x = -j.elbow_right_flex * DEG;
+
+        leftArm.wrist.rotation.y = j.wrist_left_supination * DEG;
+        rightArm.wrist.rotation.y = j.wrist_right_supination * DEG;
+      };
+
+      ws.onclose = () => {
+        statusEl.textContent = "WebSocket: Disconnected. Retrying in 2s...";
+        statusEl.style.color = "#ff6b6b";
+        setTimeout(connectWebSocket, 2000);
+      };
+    }
+
+    connectWebSocket();
+
+    // 4. API Action Triggers
+    async function triggerStep(hour24 = null) {
+      document.getElementById("inner-thought").textContent = "Synthesizing neural step...";
+      const payload = { activity_context: "Monitoring archival tape reels" };
+      if (hour24 !== null) payload.hour_24 = hour24;
+
+      const res = await fetch("http://localhost:8000/mind/step", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      document.getElementById("inner-thought").textContent = data.thoughts.inner_monologue;
+      document.getElementById("outer-speech").textContent = `"${data.thoughts.outer_monologue}"`;
+    }
+
+    async function forceState(state, valence, arousal) {
+      await fetch("http://localhost:8000/mind/override", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cognitive_state: state, valence, arousal })
+      });
+    }
+
+    // 5. Render Loop
+    function animate() {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener("resize", () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  
