@@ -77,4 +77,4 @@ GOLDEN-AGENT-MONOLITH/
 The entire deployment infrastructure has been compiled into a single, flawless installation macro. Running this script from your terminal automatically configures folders, verifies all mathematical and security test suites, compiles the isolated multi-stage container image, and launches the application sandbox on your local machine instantly:
 bash
 
-curl -sSL https://githubusercontent.com | bash
+curl -sSL https://www.github.com/KrypticKode007/Golden-Agent| bash
