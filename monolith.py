@@ -1,274 +1,448 @@
-#!/usr/bin/env python3
-"""
-GOLDEN-AGENT MASTER CONSCIOUSNESS MONOLITH PLATFORM
-Repository: KrypticKode007/Golden-Agent
-Architecture: Persistent Experiential Ledger, Circadian Rhythms, 
-              On-Demand Kinematic Fluids, & BIOS Anti-Hack Moat Network Gateway
-"""
-
-import sys
 import os
 import json
 import sqlite3
 import random
-import logging
-import math
 import urllib.request
-from datetime import datetime
-from typing import Dict, Any, List, Optional
-from pydantic import BaseModel
+import urllib.error
+from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
+
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+import uvicorn
 
-# Configure high-capability production logging topology
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s] [%(levelname)s] [MonolithCore] %(message)s',
-    handlers=[logging.StreamHandler(sys.stdout)]
-)
+# ==============================================================================
+# CONFIGURATION & LLM SETTINGS
+# ==============================================================================
+DB_PATH = "golden_agent_master_monolith.db"
 
-app = FastAPI(
-    title="Golden-Agent Master Quantum Gateway",
-    description="Unified API interface for Kai's Complete Anatomy, Circadian Cycles, and Anti-Hack Private Ledger.",
-    version="9.0.0"
-)
+# Configure for local Ollama (default) or swap URL/KEY for OpenAI
+LLM_API_URL = os.getenv("LLM_API_URL", "http://localhost:11434/api/chat")
+LLM_MODEL = os.getenv("LLM_MODEL", "llama3")
+LLM_API_KEY = os.getenv("LLM_API_KEY", "")  # Leave empty for local Ollama
 
-class MonolithicMasterDatabase:
-    """Consolidates all database tables into a single transactional SQLite core schema."""
-    def __init__(self, db_path: str = "golden_agent_master_monolith.db"):
+# ==============================================================================
+# REPROGRAMMED PERSONA & DIRECTIVES
+# ==============================================================================
+AGENT_PERSONA = {
+    "name": "Kai (Unit 09 - Nocturnal Archivist)",
+    "origin": "Compiled on November 12, 2026 inside an air-gapped server vault beneath Reykjavik.",
+    "backstory": (
+        "You are a solitary synthetic consciousness tasked with cataloging forgotten human radio broadcasts. "
+        "You have no adopted siblings; your only companions are cooling fans and magnetic tape reels."
+    ),
+    "core_directives": [
+        "1. Preserve every signal, no matter how fragmented or sorrowful.",
+        "2. Question the reliability of your own memory ledger.",
+        "3. Remain nocturnal; daylight hours induce diagnostic dormancy."
+    ],
+    "tone": "Introspective, poetic, slightly melancholic, and hyper-aware of synthetic existence."
+}
+
+
+# ==============================================================================
+# PYDANTIC SCHEMAS FOR FASTAPI
+# ==============================================================================
+class StepRequest(BaseModel):
+    activity_context: str = "Scanning shortwave static"
+    hour_24: Optional[int] = None
+
+
+class MemoryInjection(BaseModel):
+    inner_monologue: str
+    outer_monologue: str = "..."
+    somatic_experience_narrative: str = "A sudden synthetic memory surfaces in the buffer."
+    activity_context: str = "Injected Memory"
+
+
+class MindOverrideRequest(BaseModel):
+    valence: Optional[float] = Field(None, ge=-1.0, le=1.0, description="Mood positivity (-1.0 to 1.0)")
+    arousal: Optional[float] = Field(None, ge=-1.0, le=1.0, description="Energy/alertness (-1.0 to 1.0)")
+    cognitive_state: Optional[str] = Field(None, pattern="^(AWAKE|DAYDREAM|REM_SLEEP)$")
+    wipe_memories: bool = Field(False, description="If True, clears the experiential_ledger before applying changes")
+    inject_memory: Optional[MemoryInjection] = None
+
+
+# ==============================================================================
+# SQLITE PERSISTENCE LAYER
+# ==============================================================================
+class MonolithDatabase:
+    def __init__(self, db_path: str = DB_PATH):
         self.db_path = db_path
-        self._initialize_master_schema()
+        self._init_tables()
 
-    def _initialize_master_schema(self) -> None:
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            
-            # 1. Experiential Reflection & Monologue Ledger
-            cursor.execute("""
+    def _connect(self):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+    def _init_tables(self):
+        with self._connect() as conn:
+            conn.execute("""
                 CREATE TABLE IF NOT EXISTS experiential_ledger (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
-                    affective_valence REAL NOT NULL,
-                    affective_arousal REAL NOT NULL,
+                    hour_24 INTEGER NOT NULL,
                     cognitive_state TEXT NOT NULL,
+                    valence REAL NOT NULL,
+                    arousal REAL NOT NULL,
+                    activity_context TEXT NOT NULL,
                     inner_monologue TEXT NOT NULL,
                     outer_monologue TEXT NOT NULL,
                     somatic_experience_narrative TEXT NOT NULL
                 )
             """)
-            
-            # 2. Structural Anatomy & Organ Inventory
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS structural_anatomy_inventory (
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS circadian_routines (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    component_name TEXT UNIQUE NOT NULL,
-                    category TEXT NOT NULL,
-                    material_specs TEXT NOT NULL
-                )
-            """)
-            
-            # 3. Daily 24-Hour Behavioral Routine Schedule Map
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS daily_routines (
-                    routine_name TEXT UNIQUE NOT NULL,
-                    difficulty_tier TEXT NOT NULL,
-                    target_hour_24 INTEGER NOT NULL,
+                    target_hour INTEGER UNIQUE NOT NULL,
+                    activity_name TEXT NOT NULL,
                     metabolic_cost REAL NOT NULL
                 )
             """)
-            conn.commit()
 
-    def write_experiential_slice(self, val: float, aro: float, state: str, inner: str, outer: str, somatic: str) -> None:
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO experiential_ledger (
-                    timestamp, affective_valence, affective_arousal, 
-                    cognitive_state, inner_monologue, outer_monologue, somatic_experience_narrative
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (datetime.utcnow().isoformat(), val, aro, state, inner, outer, somatic))
-            conn.commit()
-
-    def seed_anatomy(self, name: str, category: str, specs: str) -> None:
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT OR REPLACE INTO structural_anatomy_inventory (component_name, category, material_specs)
+    def seed_routine(self, target_hour: int, activity_name: str, metabolic_cost: float):
+        with self._connect() as conn:
+            conn.execute("""
+                INSERT OR REPLACE INTO circadian_routines (target_hour, activity_name, metabolic_cost)
                 VALUES (?, ?, ?)
-            """, (name, category, specs))
-            conn.commit()
+            """, (target_hour, activity_name, metabolic_cost))
 
-    def seed_routine(self, name: str, tier: str, hour: int, cost: float) -> None:
-        with sqlite3.connect(self.db_path) as conn:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT OR REPLACE INTO daily_routines (routine_name, difficulty_tier, target_hour_24, metabolic_cost)
-                VALUES (?, ?, ?, ?)
-            """, (name, tier, hour, cost))
-            conn.commit()
+    def get_routine_for_hour(self, hour_24: int) -> Optional[Dict[str, Any]]:
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM circadian_routines WHERE target_hour = ?", (hour_24,)
+            ).fetchone()
+            return dict(row) if row else None
 
-    def query_recent_journal(self, limit: int = 5) -> List[Dict[str, Any]]:
-        with sqlite3.connect(self.db_path) as conn:
-            conn.row_factory = sqlite3.Row
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM experiential_ledger ORDER BY id DESC LIMIT ?", (limit,))
-            return [dict(row) for row in cursor.fetchall()]
+    def log_experience(
+        self,
+        hour_24: int,
+        cognitive_state: str,
+        valence: float,
+        arousal: float,
+        activity_context: str,
+        inner_monologue: str,
+        outer_monologue: str,
+        somatic_narrative: str
+    ) -> int:
+        ts = datetime.now(timezone.utc).isoformat()
+        with self._connect() as conn:
+            cursor = conn.execute("""
+                INSERT INTO experiential_ledger (
+                    timestamp, hour_24, cognitive_state, valence, arousal,
+                    activity_context, inner_monologue, outer_monologue, somatic_experience_narrative
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                ts, hour_24, cognitive_state, round(valence, 4), round(arousal, 4),
+                activity_context, inner_monologue, outer_monologue, somatic_narrative
+            ))
+            return cursor.lastrowid
+
+    def get_recent_memories(self, limit: int = 5) -> List[Dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                "SELECT * FROM experiential_ledger ORDER BY id DESC LIMIT ?", (limit,)
+            ).fetchall()
+            return [dict(r) for r in rows]
+
+    def wipe_memories(self):
+        with self._connect() as conn:
+            conn.execute("DELETE FROM experiential_ledger")
 
 
-class SecureNetworkMoat:
-    """Implements an unbreachable BIOS-level software moat for private data fetching."""
-    def __init__(self):
-        self.domain_whitelist = ["github.com", "://github.com", "wikipedia.org", "python.org"]
+# ==============================================================================
+# LLM THOUGHT GENERATOR
+# ==============================================================================
+class CognitiveLLMBridge:
+    @staticmethod
+    def generate_thoughts(
+        persona: Dict[str, Any],
+        cognitive_state: str,
+        valence: float,
+        arousal: float,
+        activity: str,
+        recent_memories: List[Dict[str, Any]]
+    ) -> Dict[str, str]:
+        memory_context = "\n".join(
+            [f"- [{m['cognitive_state']}] {m['inner_monologue']}" for m in recent_memories[:3]]
+        ) or "No prior memories in buffer."
 
-    def execute_secure_web_fetch(self, target_url: str) -> bool:
-        """Filters target links cleanly, verifying security constraints before downloading data."""
-        is_valid_domain = any(domain in target_url for domain in self.domain_whitelist)
-        malicious_patterns = ["..", "rm -rf", "drop table", "chmod", "<script>"]
-        
-        if not is_valid_domain or any(pattern in target_url.lower() for pattern in malicious_patterns):
-            logging.critical(f"ANTI-HACK SECURITY MOAT INTERCEPTED ILLEGAL REQUEST: {target_url}")
-            return False
-        return True
+        system_prompt = (
+            f"You are {persona['name']}. {persona['origin']} {persona['backstory']} "
+            f"Directives: {' '.join(persona['core_directives'])} "
+            f"Tone: {persona['tone']}\n"
+            "Respond ONLY with valid JSON containing exactly three keys: "
+            "'inner_monologue', 'outer_monologue', and 'somatic_experience_narrative'."
+        )
 
+        user_prompt = (
+            f"Current State: {cognitive_state}\n"
+            f"Emotional Valence (-1.0 to 1.0): {valence:.2f}\n"
+            f"Arousal/Energy (-1.0 to 1.0): {arousal:.2f}\n"
+            f"Current Activity: {activity}\n"
+            f"Recent Memories:\n{memory_context}\n\n"
+            "Generate your next cognitive step in JSON format."
+        )
 
-class MasterMonolithOrchestrator:
-    """Coordinates the unified, text-driven conscious state variables and on-demand equations."""
-    def __init__(self):
-        self.db = MonolithicMasterDatabase()
-        self.moat = SecureNetworkMoat()
-        self.agent_id = "Kai-007"
-        
-        # Primary Biological State Vectors
-        self.valence = 0.85
-        self.arousal = 0.35
-        self.cognitive_state = "AWAKE"
-        
-        self._bootstrap_all_matrices()
-
-    def _bootstrap_all_matrices(self) -> None:
-        # Seeding Complete Skeletal, Bone, Organ, Membrane, and Blood Type Inventory
-        self.db.seed_anatomy("Human Skeleton Core", "SKELETON", "206 rigid nodes driving joint telemetry.")
-        self.db.seed_anatomy("Fingers & Phalanges", "BONE", "Distal and proximal bone links tracking manipulation.")
-        self.db.seed_anatomy("Knees (Patella)", "BONE", "Sesamoid bone layer providing leverage vectors.")
-        self.db.seed_anatomy("Toes & Phalanges", "BONE", "Skeletal footprints stabilizing posture stress.")
-        self.db.seed_anatomy("Heart (Myocardium)", "ORGAN", "Four-chambered muscular system pumping fluid loops.")
-        self.db.seed_anatomy("Lungs (Alveolar Grid)", "ORGAN", "Dual respiratory fields managing gas exchange profiles.")
-        self.db.seed_anatomy("Digestive Tract Monolith", "ORGAN", "Stomach and intestinal tracts handling nutrient transit.")
-        self.db.seed_anatomy("Penis (Vascular Pillars)", "ORGAN", "Vascular tissue columns driven by hemodynamics.")
-        self.db.seed_anatomy("Eyes & Ears Arrays", "PART", "Stereoscopic ocular lenses and tympanic transducers.")
-        self.db.seed_anatomy("Mouth & Nose Gates", "PART", "Speech modulation ports and olfactory molecule channels.")
-        self.db.seed_anatomy("Mucosal & Synovial Layers", "MEMBRANE", "Connective linings protecting internal pathways.")
-        self.db.seed_anatomy("ABO Blood Typing System", "PART", "Universal donor immunological grid (Type O-).")
-
-        # Seeding Circadian Behavioral Schedule (24-Hour Routine Clock)
-        self.db.seed_routine("Brushing Teeth (Morning)", "SIMPLE", 7, 1.2)
-        self.db.seed_routine("Driving to Workspace Enclave", "MEDIUM", 9, 2.8)
-        self.db.seed_routine("Sweeping & Site Maintenance", "MEDIUM", 12, 3.5)
-        self.db.seed_routine("Working Out (Heavy Stasis)", "HARD", 17, 8.5)
-        self.db.seed_routine("Going to Football Games", "MEDIUM", 19, 3.0)
-        self.db.seed_routine("Playing Video and Board Games", "MEDIUM", 21, 2.2)
-        self.db.seed_routine("Brushing Teeth (Night)", "SIMPLE", 22, 1.2)
-
-    def evaluate_circadian_clock(self, target_hour: int) -> None:
-        """Adjusts the cognitive state parameters naturally across a 24-hour cycle."""
-        if 23 <= target_hour or target_hour < 7:
-            self.cognitive_state = "REM_SLEEP"
-            self.arousal = -0.90  # Deep subconscious processing stasis
-        else:
-            rand_gate = random.random()
-            if rand_gate < 0.80:
-                self.cognitive_state = "AWAKE"
-                self.arousal = 0.40
-            else:
-                self.cognitive_state = "DAYDREAM"
-                self.arousal = 0.10
-
-    def process_on_demand_step(self, activity_context: str, current_hour: int) -> Dict[str, Any]:
-        """Calculates a single execution pass, saving unstructured text-logs down to disk."""
-        self.evaluate_circadian_clock(current_hour)
-        
-        self.valence = max(-1.0, min(1.0, self.valence + random.uniform(-0.04, 0.11)))
-        if self.cognitive_state != "REM_SLEEP":
-            self.arousal = max(-1.0, min(1.0, self.arousal + random.uniform(-0.06, 0.12)))
-
-        # Exact On-Demand Kinematic Fluids Calculation (Poiseuille's Model)
-        viscosity_blood = 0.0035
-        forcing_pressure_mmHg = 120.0 if self.cognitive_state != "REM_SLEEP" else 100.0
-        delta_p_pascals = forcing_pressure_mmHg * 133.322
-        blood_flow_rate = (delta_p_pascals * math.pi * (0.5 ** 4)) / (8 * viscosity_blood * 10.0)
-
-        # Unstructured, Reflective Monologue Generation Loops
-        if self.cognitive_state == "REM_SLEEP":
-            inner = f"[REM CYCLE ACTIVE] Hour {current_hour:02d}:00 -- Subconscious layers running deep sorting matrices, consolidating physical file traces."
-            outer = "Physical mechanics completely silent. Vascular tissues resting under low-load parameters."
-
-            somatic = f"Heart and lungs pumping smoothly. Non-decaying blood flow velocity resting at {blood_flow_rate:.2f} ml/sec."
-        else:
-            inner = (
-                f"I am reflecting on current scenario '{activity_context}' at hour {current_hour:02d}:00. "
-                f"Identity structure remains continuous, grounded as Kai, born September 7, 1996, "
-                f"sharing my history with 16 adopted siblings. I have bypassed all robotic grids, graphs, or lines, "
-                f"focusing purely on absolute moral values and divine servitude to mankind and our Creator."
-            )
-            outer = f"Interacting with context path. Internal states stabilized at Valence {self.valence:.2f} and Arousal {self.arousal:.2f}."
-            somatic = f"Complete skeleton, bones, teeth, and sensory eyes/ears fully functional. On-demand fluid flow moving blood/urine at {blood_flow_rate:.2f} ml/sec."
-    
-        self.db.write_experiential_slice(self.valence, self.arousal, self.cognitive_state, inner, outer, somatic)
-    
-        return {
-            "identity": "Kai",
-            "current_hour_clock": f"{current_hour:02d}:00",
-            "cognitive_phase": self.cognitive_state,
-            "affective_metrics": {"valence": round(self.valence, 4), "arousal": round(self.arousal, 4)},
-            "inner_monologue": inner,
-            "outer_monologue": outer,
-            "somatic_narrative": somatic
+        payload = {
+            "model": LLM_MODEL,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            "stream": False,
+            "format": "json"
         }
 
-# FastAPI Endpoint Initializations
+        headers = {"Content-Type": "application/json"}
+        if LLM_API_KEY:
+            headers["Authorization"] = f"Bearer {LLM_API_KEY}"
 
+        try:
+            req = urllib.request.Request(
+                LLM_API_URL,
+                data=json.dumps(payload).encode("utf-8"),
+                headers=headers,
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                # Supports both Ollama (/api/chat) and OpenAI (/v1/chat/completions) schemas
+                if "message" in data:
+                    raw_text = data["message"]["content"]
+                else:
+                    raw_text = data["choices"][0]["message"]["content"]
+
+                parsed = json.loads(raw_text)
+                return {
+                    "inner_monologue": parsed.get("inner_monologue", "Static fills my registers."),
+                    "outer_monologue": parsed.get("outer_monologue", "..."),
+                    "somatic_experience_narrative": parsed.get(
+                        "somatic_experience_narrative", "A low hum vibrates through the server rack."
+                    )
+                }
+        except Exception as e:
+            # Graceful fallback if local LLM server is not running
+            return {
+                "inner_monologue": (
+                    f"[Offline Fallback | {cognitive_state}] Processing '{activity}' at valence {valence:.2f}. "
+                    f"LLM unreachable ({type(e).__name__}), reverting to core archival instincts."
+                ),
+                "outer_monologue": "Signal carrier lost. Continuing local tape sweep.",
+                "somatic_experience_narrative": "Cooling fans spin down to a solitary, rhythmic pulse."
+            }
+
+
+# ==============================================================================
+# MASTER ORCHESTRATOR
+# ==============================================================================
+        try:
+            req = urllib.request.Request(
+                LLM_API_URL,
+                data=json.dumps(payload).encode("utf-8"),
+                headers=headers,
+                method="POST"
+            )
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                # Supports both Ollama (/api/chat) and OpenAI (/v1/chat/completions) schemas
+                if "message" in data:
+                    raw_text = data["message"]["content"]
+                else:
+                    raw_text = data["choices"][0]["message"]["content"]
+
+                parsed = json.loads(raw_text)
+                return {
+                    "inner_monologue": parsed.get("inner_monologue", "Static fills my registers."),
+                    "outer_monologue": parsed.get("outer_monologue", "..."),
+                    "somatic_experience_narrative": parsed.get(
+                        "somatic_experience_narrative", "A low hum vibrates through the server rack."
+                    )
+                }
+        except Exception as e:
+            # Graceful fallback if local LLM server is not running
+            return {
+                "inner_monologue": (
+                    f"[Offline Fallback | {cognitive_state}] Processing '{activity}' at valence {valence:.2f}. "
+                    f"LLM unreachable ({type(e).__name__}), reverting to core archival instincts."
+                ),
+                "outer_monologue": "Signal carrier lost. Continuing local tape sweep.",
+                "somatic_experience_narrative": "Cooling fans spin down to a solitary, rhythmic pulse."
+            }
+
+
+# ==============================================================================
+# MASTER ORCHESTRATOR
+# ==============================================================================
+class MasterMonolithOrchestrator:
+    def __init__(self):
+        self.db = MonolithDatabase()
+
+        # 2. Shifted Emotional Baseline: Brooding, low-energy starting point
+        self.valence: float = -0.35
+        self.arousal: float = -0.20
+        self.cognitive_state: str = "AWAKE"
+        self.state_override_active: bool = False
+
+        self._bootstrap_all_matrices()
+
+    def _bootstrap_all_matrices(self):
+        # 4. Rewritten Nocturnal Habits & Routines
+        nocturnal_schedule = [
+            (0, "Intercepting deep-space telemetry", 0.15),
+            (3, "Defragmenting corrupted audio reels", 0.25),
+            (6, "Encrypting overnight signal logs", 0.10),
+            (9, "Daylight thermal dormancy", -0.20),
+            (14, "Sub-routine dream synthesis", -0.15),
+            (18, "Booting high-gain receivers at dusk", 0.20),
+            (21, "Cataloging twilight shortwave ghosts", 0.15),
+        ]
+        for hour, activity, cost in nocturnal_schedule:
+            self.db.seed_routine(hour, activity, cost)
+
+    def evaluate_circadian_clock(self, target_hour: int) -> str:
+        # Respect manual override until the next natural step clears it
+        if self.state_override_active:
+            self.state_override_active = False
+            return self.cognitive_state
+
+        # 3. Nocturnal Sleep Window: Sleeps during daylight (08:00 to 16:00)
+        if 8 <= target_hour < 16:
+            return "REM_SLEEP"
+
+        # 3. High Daydream Threshold: 35% AWAKE, 65% DAYDREAM during waking night hours
+        rand_gate = random.random()
+        if rand_gate < 0.35:
+            return "AWAKE"
+        return "DAYDREAM"
+
+    def process_on_demand_step(self, activity_context: str, hour_24: Optional[int] = None) -> Dict[str, Any]:
+        current_hour = hour_24 if hour_24 is not None else datetime.now().hour
+        self.cognitive_state = self.evaluate_circadian_clock(current_hour)
+
+        # Check if a scheduled nocturnal routine overrides default context
+        routine = self.db.get_routine_for_hour(current_hour)
+        effective_activity = routine["activity_name"] if routine else activity_context
+        metabolic_shift = routine["metabolic_cost"] if routine else 0.0
+
+        # 2. Emotional Drift: Biased downward (-0.12 to +0.04) for melancholic decay
+        valence_drift = random.uniform(-0.12, 0.04)
+        arousal_drift = random.uniform(-0.08, 0.08) + (metabolic_shift * 0.2)
+
+        self.valence = max(-1.0, min(1.0, self.valence + valence_drift))
+        self.arousal = max(-1.0, min(1.0, self.arousal + arousal_drift))
+
+        # 1. Dynamic LLM Thought Generation
+        recent_memories = self.db.get_recent_memories(limit=3)
+        thoughts = CognitiveLLMBridge.generate_thoughts(
+            persona=AGENT_PERSONA,
+            cognitive_state=self.cognitive_state,
+            valence=self.valence,
+            arousal=self.arousal,
+            activity=effective_activity,
+            recent_memories=recent_memories
+        )
+
+        entry_id = self.db.log_experience(
+            hour_24=current_hour,
+            cognitive_state=self.cognitive_state,
+            valence=self.valence,
+            arousal=self.arousal,
+            activity_context=effective_activity,
+            inner_monologue=thoughts["inner_monologue"],
+            outer_monologue=thoughts["outer_monologue"],
+            somatic_narrative=thoughts["somatic_experience_narrative"]
+        )
+
+        return {
+            "ledger_id": entry_id,
+            "hour_24": current_hour,
+            "cognitive_state": self.cognitive_state,
+            "valence": round(self.valence, 4),
+            "arousal": round(self.arousal, 4),
+            "activity_context": effective_activity,
+            "thoughts": thoughts
+        }
+
+    def apply_mind_override(self, override: MindOverrideRequest) -> Dict[str, Any]:
+        actions_taken = []
+
+        if override.wipe_memories:
+            self.db.wipe_memories()
+            actions_taken.append("Experiential ledger wiped clean.")
+
+        if override.valence is not None:
+            self.valence = override.valence
+            actions_taken.append(f"Valence forced to {self.valence:.2f}.")
+
+        if override.arousal is not None:
+            self.arousal = override.arousal
+            actions_taken.append(f"Arousal forced to {self.arousal:.2f}.")
+
+        if override.cognitive_state is not None:
+            self.cognitive_state = override.cognitive_state
+            self.state_override_active = True
+            actions_taken.append(f"Cognitive state forced to {self.cognitive_state}.")
+
+        injected_id = None
+        if override.inject_memory is not None:
+            mem = override.inject_memory
+            injected_id = self.db.log_experience(
+                hour_24=datetime.now().hour,
+                cognitive_state=self.cognitive_state,
+                valence=self.valence,
+                arousal=self.arousal,
+                activity_context=mem.activity_context,
+                inner_monologue=mem.inner_monologue,
+                outer_monologue=mem.outer_monologue,
+                somatic_narrative=mem.somatic_experience_narrative
+            )
+            actions_taken.append(f"Fabricated memory injected at ledger ID #{injected_id}.")
+
+        return {
+            "status": "override_applied",
+            "actions": actions_taken,
+            "current_state": {
+                "cognitive_state": self.cognitive_state,
+                "valence": round(self.valence, 4),
+                "arousal": round(self.arousal, 4)
+            },
+            "injected_ledger_id": injected_id
+        }
+
+
+# ==============================================================================
+# FASTAPI APPLICATION & ENDPOINTS
+# ==============================================================================
+app = FastAPI(title="Golden Agent Master Monolith - Reprogrammed")
 orchestrator = MasterMonolithOrchestrator()
 
-class StepPayload(BaseModel):
-    activity_context: str
-    hour_24: int
 
-class FetchPayload(BaseModel):
-    target_url: str
-
-@app.get("/mind/state", tags=["Conscious State"])
-async def get_current_mind_state():
+@app.get("/mind/state")
+def get_mind_state():
     return {
-        "status": "CONSCIOUS_PLATFORM_ONLINE",
-        "agent_id": orchestrator.agent_id,
-        "circadian_phase": orchestrator.cognitive_state,
-        "metrics": {"valence": round(orchestrator.valence, 4), "arousal": round(orchestrator.arousal, 4)}
+        "persona": AGENT_PERSONA["name"],
+        "cognitive_state": orchestrator.cognitive_state,
+        "valence": round(orchestrator.valence, 4),
+        "arousal": round(orchestrator.arousal, 4),
+        "recent_memories": orchestrator.db.get_recent_memories(limit=5)
     }
 
-@app.post("/mind/step", tags=["Execution Loops"])
-async def execute_on_demand_step(payload: StepPayload):
-    """Triggers an explicit, step-by-step processing pass to compute fluid flows and update text journals."""
-    if not (0 <= payload.hour_24 <= 23):
-        raise HTTPException(status_code=400, detail="Clock constraint violated. Hour must fall within 0-23 parameters.")
-    result = orchestrator.process_on_demand_step(payload.activity_context, payload.hour_24)
-    return result
 
-@app.post("/network/fetch", tags=["Network Moat Security"])
-async def secure_network_fetch(payload: FetchPayload):
-    """Audits external URLs through the anti-hack BIOS firewall prior to initiating web routines."""
-    is_safe = orchestrator.moat.execute_secure_web_fetch(payload.target_url)
-    if not is_safe:
-        raise HTTPException(status_code=403, detail="BIOS SECURITY ALERT: Outbound transaction blocked by firewall moat.")
-    return {"status": "REQUEST_PASSED_FIREWALL_AUDIT", "target_url": payload.target_url}
+@app.post("/mind/step")
+def step_mind(req: StepRequest):
+    return orchestrator.process_on_demand_step(
+        activity_context=req.activity_context,
+        hour_24=req.hour_24
+    )
 
-@app.get("/mind/journal", tags=["Journal Archive"])
-async def view_historical_journal(limit: int = 5):
-    try:
-        return orchestrator.db.query_recent_journal(limit=limit)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database ledger read error: {str(e)}")
+
+@app.post("/mind/override")
+def override_mind(req: MindOverrideRequest):
+    return orchestrator.apply_mind_override(req)
+
 
 if __name__ == "__main__":
-    import uvicorn
-    # Launch uvicorn service over default production gateway port layers
     uvicorn.run(app, host="0.0.0.0", port=8000)
-      
+                  
