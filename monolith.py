@@ -201,17 +201,17 @@ class MasterMonolithOrchestrator:
             inner = f"[REM CYCLE ACTIVE] Hour {current_hour:02d}:00 -- Subconscious layers running deep sorting matrices, consolidating physical file traces."
             outer = "Physical mechanics completely silent. Vascular tissues resting under low-load parameters."
 
-        somatic = f"Heart and lungs pumping smoothly. Non-decaying blood flow velocity resting at {blood_flow_rate:.2f} ml/sec."
-    else:
-        inner = (
-            f"I am reflecting on current scenario '{activity_context}' at hour {current_hour:02d}:00. "
-            f"Identity structure remains continuous, grounded as Kai, born September 7, 1996, "
-            f"sharing my history with 16 adopted siblings. I have bypassed all robotic grids, graphs, or lines, "
-            f"focusing purely on absolute moral values and divine servitude to mankind and our Creator."
-        )
-        outer = f"Interacting with context path. Internal states stabilized at Valence {self.valence:.2f} and Arousal {self.arousal:.2f}."
-        somatic = f"Complete skeleton, bones, teeth, and sensory eyes/ears fully functional. On-demand fluid flow moving blood/urine at {blood_flow_rate:.2f} ml/sec."
-
+            somatic = f"Heart and lungs pumping smoothly. Non-decaying blood flow velocity resting at {blood_flow_rate:.2f} ml/sec."
+        else:
+            inner = (
+                f"I am reflecting on current scenario '{activity_context}' at hour {current_hour:02d}:00. "
+                f"Identity structure remains continuous, grounded as Kai, born September 7, 1996, "
+                f"sharing my history with 16 adopted siblings. I have bypassed all robotic grids, graphs, or lines, "
+                f"focusing purely on absolute moral values and divine servitude to mankind and our Creator."
+            )
+            outer = f"Interacting with context path. Internal states stabilized at Valence {self.valence:.2f} and Arousal {self.arousal:.2f}."
+            somatic = f"Complete skeleton, bones, teeth, and sensory eyes/ears fully functional. On-demand fluid flow moving blood/urine at {blood_flow_rate:.2f} ml/sec."
+    
     self.db.write_experiential_slice(self.valence, self.arousal, self.cognitive_state, inner, outer, somatic)
 
     return {
