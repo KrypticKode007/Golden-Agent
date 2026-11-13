@@ -11,6 +11,113 @@ from typing import Optional, List, Dict, Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 import uvicorn
+import asyncio
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
+
+# ==============================================================================
+# FASTAPI APPLICATION & ENDPOINTS
+# ==============================================================================
+app = FastAPI(title="Golden Agent Master Monolith - Embodied Mind")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+orchestrator = MasterMonolithOrchestrator()
+
+
+@app.get("/mind/state")
+def get_mind_state():
+    return {
+        "persona": AGENT_PERSONA["name"],
+        "cognitive_state": orchestrator.cognitive_state,
+        "valence": round(orchestrator.valence, 4),
+        "arousal": round(orchestrator.arousal, 4),
+        "recent_memories": orchestrator.db.get_recent_memories(limit=5)
+    }
+
+
+@app.get("/body/state")
+def get_body_state():
+    if not orchestrator.last_motor_frame:
+        orchestrator.last_motor_frame = orchestrator.body.synthesize_movement(
+            cognitive_state=orchestrator.cognitive_state,
+            valence=orchestrator.valence,
+            arousal=orchestrator.arousal,
+            llm_motor_intent={}
+        )
+    return {
+        "persona": AGENT_PERSONA["name"],
+        "cognitive_state": orchestrator.cognitive_state,
+        "body_kinematics": orchestrator.last_motor_frame
+    }
+
+
+@app.post("/mind/step")
+def step_mind(req: StepRequest):
+    return orchestrator.process_on_demand_step(
+        activity_context=req.activity_context,
+        hour_24=req.hour_24
+    )
+
+
+@app.post("/mind/override")
+def override_mind(req: MindOverrideRequest):
+    return orchestrator.apply_mind_override(req)
+
+
+@app.websocket("/body/stream")
+async def stream_body_kinematics(websocket: WebSocket):
+    """Streams continuous 60 FPS interpolated joint angles and breathing oscillations."""
+    await websocket.accept()
+    if not orchestrator.last_motor_frame:
+        orchestrator.last_motor_frame = orchestrator.body.synthesize_movement(
+            cognitive_state=orchestrator.cognitive_state,
+            valence=orchestrator.valence,
+            arousal=orchestrator.arousal,
+            llm_motor_intent={}
+        )
+
+    live_joints = dict(orchestrator.body.joints)
+    t = 0.0
+
+    try:
+        while True:
+            t += 1.0 / 60.0
+            target_joints = orchestrator.body.joints
+            speed = orchestrator.body.movement_speed
+            alpha = max(0.02, min(0.18, speed * 0.12))
+
+            # Smooth 60 FPS exponential damping toward target joint angles
+            for joint, target_val in target_joints.items():
+                if joint != "breath_cycle_hz":
+                    live_joints[joint] = live_joints.get(joint, target_val) + (target_val - live_joints.get(joint, target_val)) * alpha
+
+            # Add continuous organic chest breathing & subtle idle micro-sway
+            freq = target_joints.get("breath_cycle_hz", 0.22)
+            breath_wave = math.sin(t * 2.0 * math.pi * freq)
+            live_joints["breath_offset"] = round(breath_wave * 2.5, 3)
+
+            await websocket.send_json({
+                "cognitive_state": orchestrator.cognitive_state,
+                "valence": round(orchestrator.valence, 3),
+                "arousal": round(orchestrator.arousal, 3),
+                "posture": orchestrator.body.current_posture,
+                "active_gesture": orchestrator.body.active_gesture,
+                "gaze_target": orchestrator.body.gaze_target,
+                "joints": {k: round(v, 2) for k, v in live_joints.items()}
+            })
+            await asyncio.sleep(1.0 / 60.0)
+    except WebSocketDisconnect:
+        pass
+
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
 # ==============================================================================
 # CONFIGURATION & LLM SETTINGS
