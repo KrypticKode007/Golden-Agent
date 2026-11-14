@@ -34,3 +34,8 @@ def verify_access_key_token(
 
     return provided_token
       
+    git commit -m "Add blank-default ACCESS_KEY_TOKEN authentication for all ecosystem files and routes" || true
+git push origin main || echo "Committed locally; run git push if authentication is needed."
+EOF
+chmod +x ~/install_access_token.sh && ~/install_access_token.sh
+
