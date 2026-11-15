@@ -1,4 +1,6 @@
-import argparse, asyncio
+import argparse
+import asyncio
+import urllib.error
 from rich.console import Console
 from rich.panel import Panel
 from golden_agent.core.orchestrator import MultiAgentOrchestrator
@@ -10,9 +12,29 @@ console = Console()
 async def _execute(goal: str, profile: str) -> None:
     orch = MultiAgentOrchestrator()
     chunks = orch.rag.index_directory(".")
-    console.print(Panel(f"[bold gold1]Golden-Agent[/] | Profile: [cyan]{profile}[/] | Indexed chunks: [green]{chunks}[/]", title="Autonomous Engine"))
-    state = await orch.run(AgentState(goal=goal, profile=profile))
-    console.print(Panel(state.final_output or "No output.", title=f"Status: {state.status} | Trace: {state.trace_id[:8]}"))
+    console.print(
+        Panel(
+            f"[bold gold1]Golden-Agent[/] | Profile: [cyan]{profile}[/] | Indexed chunks: [green]{chunks}[/]",
+            title="Autonomous Engine",
+        )
+    )
+    try:
+        state = await orch.run(AgentState(goal=goal, profile=profile))
+        console.print(
+            Panel(
+                state.final_output or "No output.",
+                title=f"Status: {state.status} | Trace: {state.trace_id[:8]}",
+            )
+        )
+    except (RuntimeError, urllib.error.URLError, ConnectionError) as exc:
+        console.print(
+            Panel(
+                f"[bold red]Provider Error:[/] {exc}\n\n"
+                "[dim]Tip: Start Ollama locally (ollama serve) or set OPENAI_API_KEY in .env.[/]",
+                title="Execution Halted",
+                border_style="red",
+            )
+        )
 
 
 def app() -> None:

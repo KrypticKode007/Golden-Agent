@@ -119,7 +119,7 @@ class ModelRouter:
                 data=payload,
                 headers={
                     "Content-Type": "application/json",
-                    "Authorization": f"Bearer {api_key}",
+                    "Authorization": f"Bearer {api_key}", "User-Agent": "Golden-Agent/1.0",
                 },
                 method="POST",
             )
