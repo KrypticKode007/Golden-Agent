@@ -24,3 +24,24 @@ python ~/kryptic_ecosystem/Golden-Agent/unified_golden_gateway.py
 * `GET /battery/live` — Live Android battery telemetry (`X-Access-Key-Token`)
 * `GET /models` & `POST /models/run` — List and run `Advanced-Ai-Model` scripts (`X-Access-Key-Token`)
 * `POST /cybernetic/battery/autonomous` — Run 4-cell self-healing battery simulation
+
+## 🤖 Autonomous Multi-Agent Engine (`src/golden_agent`)
+
+Golden-Agent includes a modular, 5-track autonomous agent platform mounted directly onto the gateway (`Port 8888`) and runnable from the CLI:
+
+- **Multi-Agent DAG Orchestrator (`core/orchestrator.py`):** Decomposes complex goals into parallel subtasks across specialized `coder`, `researcher`, and `ops` workers with swappable YAML profiles (`profiles/`).
+- **Tiered Hybrid Model Router (`config/model_router.py`):** Routes tasks across Tier 1 (Fast/Local Ollama), Tier 2 (Standard), and Tier 3 (Frontier Reasoning) models with zero-dependency HTTP and LiteLLM support.
+- **Guardrails, HITL & Sandbox (`runtime/`):** Classifies tool calls (`READ`, `WRITE`, `DESTRUCTIVE`), pauses destructive actions for human approval, and runs code in isolated Docker or Termux subprocess sandboxes.
+- **Context Compressor & Hybrid AST RAG (`core/context_manager.py`, `memory/`):** Compresses long sessions automatically, indexes Python AST + docs with BM25/coverage search, and persists cross-session episodic memory.
+- **Flight-Recorder Telemetry & Evals (`telemetry/tracer.py`, `tests/golden_evals/`):** Logs JSONL span timings/costs and runs automated regression benchmarks in CI.
+
+### Autonomous Endpoints & CLI
+
+- `POST /agent/run` — Execute a goal (`{"goal": "...", "profile": "universal|coder|researcher|ops"}`)
+- `POST /agent/stream` — Stream live Server-Sent Events (SSE) execution updates
+- `POST /agent/approve/{approval_id}` — Approve a paused Human-in-the-Loop (HITL) action
+- `GET /agent/tools` & `POST /agent/index` — Inspect registered MCP/sandbox tools and re-index workspace AST chunks
+- **Termux / Terminal CLI:**
+  ```bash
+  PYTHONPATH=src python -m golden_agent.interfaces.cli "Audit repository and summarize key modules" --profile researcher
+  ```

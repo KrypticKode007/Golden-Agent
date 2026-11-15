@@ -65,7 +65,7 @@ def create_app() -> FastAPI:
     return app
 
 
-def mount_onto(existing_app: FastAPI) -> FastAPI:
+def mount_onto(existing_app: FastAPI, dependencies: list[object] | None = None) -> FastAPI:
     """Mount Golden-Agent autonomous endpoints onto unified_golden_gateway.py."""
-    existing_app.include_router(router)
+    existing_app.include_router(router, dependencies=dependencies or [])
     return existing_app

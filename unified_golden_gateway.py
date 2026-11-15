@@ -186,6 +186,18 @@ async def background_homeostasis_loop():
 async def startup_event():
     asyncio.create_task(background_homeostasis_loop())
 
+
+# --- Autonomous Multi-Agent Platform Mount ---
+import sys as _sys
+from pathlib import Path as _Path
+_src = str(_Path(__file__).resolve().parent / 'src')
+if _src not in _sys.path:
+    _sys.path.insert(0, _src)
+from fastapi import Depends
+from access_key_token import verify_access_key_token
+from golden_agent.interfaces.api import mount_onto
+mount_onto(app, dependencies=[Depends(verify_access_key_token)])
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8888)
