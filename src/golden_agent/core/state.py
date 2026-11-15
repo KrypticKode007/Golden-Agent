@@ -23,7 +23,7 @@ class SubTask(BaseModel):
     id: str = Field(default_factory=lambda: uuid4().hex[:8])
     title: str
     description: str
-    assigned_worker: str  # "researcher" | "coder" | "ops"
+    assigned_worker: str
     dependencies: list[str] = Field(default_factory=list)
     status: TaskStatus = TaskStatus.PENDING
     result: str | None = None
@@ -60,4 +60,4 @@ class AgentState(BaseModel):
     total_cost_usd: float = 0.0
     status: TaskStatus = TaskStatus.PENDING
     final_output: str | None = None
-  
+    
