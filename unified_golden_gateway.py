@@ -209,6 +209,8 @@ if hasattr(_ga, '__path__') and _ga_pkg not in _ga.__path__:
     _ga.__path__.insert(0, _ga_pkg)
 for _k in [k for k in _sys.modules if k == 'golden_agent' or k.startswith('golden_agent.')]:
     del _sys.modules[_k]
+if _src in _sys.path: _sys.path.remove(_src)
+_sys.path.insert(0, _src)
 from golden_agent.interfaces.api import mount_onto
 mount_onto(app, dependencies=[Depends(verify_access_key_token)])
 
