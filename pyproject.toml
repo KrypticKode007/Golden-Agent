@@ -42,5 +42,7 @@ golden-agent = "golden_agent.interfaces.cli:app"
 packages = ["src/golden_agent"]
 
 [tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = ["--import-mode=importlib"]
 asyncio_mode = "auto"
 testpaths = ["tests"]
