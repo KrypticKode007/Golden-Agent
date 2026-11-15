@@ -1,7 +1,9 @@
 from enum import StrEnum
 from functools import lru_cache
-from pydantic import Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+import os
+from pathlib import Path
+from typing import Any
+from pydantic import BaseModel, Field
 
 
 class ExecutionMode(StrEnum):
@@ -10,13 +12,19 @@ class ExecutionMode(StrEnum):
     HYBRID = "hybrid"
 
 
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_prefix="GOLDEN_",
-        extra="ignore",
-    )
+def _load_dotenv(path: str = ".env") -> None:
+    env_file = Path(path)
+    if not env_file.is_file():
+        return
+    for line in env_file.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, val = line.split("=", 1)
+        os.environ.setdefault(key.strip(), val.strip().strip('"').strip("'"))
 
+
+class Settings(BaseModel):
     app_name: str = "Golden-Agent"
     environment: str = "development"
     execution_mode: ExecutionMode = ExecutionMode.HYBRID
@@ -46,8 +54,19 @@ class Settings(BaseSettings):
     qdrant_url: str = "http://localhost:6333"
     workspace_root: str = "."
 
+    def __init__(self, **data: Any) -> None:
+        _load_dotenv()
+        field_names = getattr(type(self), "model_fields", None) or getattr(
+            type(self), "__fields__", {}
+        )
+        env_overrides: dict[str, Any] = {}
+        for field_name in field_names:
+            env_key = f"GOLDEN_{field_name.upper()}"
+            if env_key in os.environ and field_name not in data:
+                env_overrides[field_name] = os.environ[env_key]
+        super().__init__(**{**env_overrides, **data})
+
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-    
