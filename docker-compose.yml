@@ -1,24 +1,20 @@
+# Docker Compose stack for Ollama and Golden-Agent API
 services:
-  golden-agent:
-    build: .
-    ports:
-      - "8888:8888"
-    environment:
-      - GOLDEN_EXECUTION_MODE=hybrid
-      - GOLDEN_OLLAMA_BASE_URL=http://ollama:11434
-      - GOLDEN_QDRANT_URL=http://qdrant:6333
-    volumes:
-      - .:/workspace
-      - /var/run/docker.sock:/var/run/docker.sock
-    depends_on:
-      - qdrant
-
-  qdrant:
-    image: qdrant/qdrant:latest
-    ports:
-      - "6333:6333"
-
   ollama:
     image: ollama/ollama:latest
-    ports:
-      - "11434:11434"
+    container_name: golden-ollama
+    ports: ["11434:11434"]
+    volumes: [ollama_data:/root/.ollama]
+    restart: unless-stopped
+  golden-agent:
+    build: .
+    container_name: golden-agent-api
+    depends_on: [ollama]
+    ports: ["8000:8000"]
+    environment:
+      - GOLDEN_EXECUTION_MODE=local
+      - GOLDEN_OLLAMA_BASE_URL=http://ollama:11434
+    volumes: [.:/workspace]
+    restart: unless-stopped
+volumes:
+  ollama_data:
