@@ -1,3 +1,8 @@
+import sys as _boot_sys
+from pathlib import Path as _boot_Path
+_boot_src = str(_boot_Path(__file__).resolve().parent / 'src')
+if _boot_src not in _boot_sys.path:
+    _boot_sys.path.insert(0, _boot_src)
 import os
 import re
 import gc
@@ -195,6 +200,9 @@ if _src not in _sys.path:
     _sys.path.insert(0, _src)
 from fastapi import Depends
 from access_key_token import verify_access_key_token
+import golden_agent as _ga
+if _src not in getattr(_ga, '__path__', []):
+    _ga.__path__.insert(0, _src)
 from golden_agent.interfaces.api import mount_onto
 mount_onto(app, dependencies=[Depends(verify_access_key_token)])
 
