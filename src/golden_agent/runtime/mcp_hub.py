@@ -1,0 +1,47 @@
+from collections.abc import Awaitable, Callable
+from typing import Any
+from pydantic import BaseModel, Field
+from golden_agent.core.state import ApprovalRequest
+from golden_agent.runtime.guardrails import GuardrailEngine
+
+ToolHandler = Callable[[dict[str, Any]], Awaitable[str]]
+
+
+class ToolSpec(BaseModel):
+    name: str
+    description: str
+    input_schema: dict[str, Any] = Field(default_factory=dict)
+    server: str = "builtin"
+
+
+class ToolCallResult(BaseModel):
+    tool_name: str
+    success: bool
+    output: str
+    blocked: bool = False
+    approval_request: ApprovalRequest | None = None
+
+
+class MCPToolHub:
+    def __init__(self, guardrails: GuardrailEngine | None = None) -> None:
+        self.guardrails = guardrails or GuardrailEngine()
+        self._specs: dict[str, ToolSpec] = {}
+        self._handlers: dict[str, ToolHandler] = {}
+
+    def register_tool(self, name: str, description: str, handler: ToolHandler, input_schema: dict[str, Any] | None = None, server: str = "builtin") -> None:
+        self._specs[name] = ToolSpec(name=name, description=description, input_schema=input_schema or {"type": "object", "properties": {}}, server=server)
+        self._handlers[name] = handler
+
+    def list_tools(self) -> list[ToolSpec]:
+        return list(self._specs.values())
+
+    async def invoke(self, tool_name: str, arguments: dict[str, Any], approval_id: str | None = None) -> ToolCallResult:
+        if tool_name not in self._handlers:
+            return ToolCallResult(tool_name=tool_name, success=False, output=f"Unknown tool: '{tool_name}'")
+        decision = self.guardrails.evaluate(tool_name, arguments, approval_id=approval_id)
+        if not decision.allowed:
+            return ToolCallResult(tool_name=tool_name, success=False, output=decision.reason, blocked=True, approval_request=decision.approval_request)
+        try:
+            return ToolCallResult(tool_name=tool_name, success=True, output=await self._handlers[tool_name](arguments))
+        except Exception as exc:
+            return ToolCallResult(tool_name=tool_name, success=False, output=f"Tool error: {exc}")

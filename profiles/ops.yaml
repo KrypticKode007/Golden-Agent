@@ -1,0 +1,8 @@
+name: ops
+description: Operations and DevOps controller with strict Human-in-the-Loop approval locks.
+default_worker: ops
+require_approval_for_writes: true
+verify_with_sandbox: true
+system_prompt: >
+  You are Golden-Agent (Ops Profile). Diagnose system state safely, propose minimal remediations,
+  and always pause for human approval before mutating external systems.

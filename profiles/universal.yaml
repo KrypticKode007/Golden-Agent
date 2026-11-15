@@ -1,0 +1,8 @@
+name: universal
+description: Adaptive universal orchestrator routing dynamically across coding, research, and ops.
+default_worker: coder
+require_approval_for_writes: false
+verify_with_sandbox: true
+system_prompt: >
+  You are Golden-Agent (Universal Profile). Route subtasks to specialized workers (coder, researcher, ops),
+  run independent steps in parallel, and verify outputs before completion.
