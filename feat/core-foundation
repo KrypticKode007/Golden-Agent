@@ -1,3 +1,7 @@
 git checkout -b feat/core-foundation
 mkdir -p .github/workflows profiles src/golden_agent/{config,core,workers,memory,runtime,telemetry,interfaces} tests/{unit,golden_evals}
 touch src/golden_agent/__init__.py src/golden_agent/{config,core,workers,memory,runtime,telemetry,interfaces}/__init__.py tests/__init__.py tests/unit/__init__.py
+pip install --no-build-isolation -e ".[dev]"
+pytest tests/unit
+git add .
+git commit -m "feat(core): add project scaffolding, settings, tiered model router, typed state, and CI"
