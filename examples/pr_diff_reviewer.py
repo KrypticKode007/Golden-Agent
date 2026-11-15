@@ -1,4 +1,4 @@
-"""Review staged git changes for bugs, security issues, and edge cases."""
+"""Review recent git changes for bugs, security issues, and edge cases."""
 import asyncio
 import subprocess
 from golden_agent.core.orchestrator import MultiAgentOrchestrator
