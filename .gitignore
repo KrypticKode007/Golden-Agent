@@ -10,3 +10,8 @@ golden_agent_organic_mind.db
 ollama.log
 *.db
 *.sqlite
+.coverage
+.env
+*.db
+*.log
+.golden_memory/
