@@ -24,7 +24,13 @@ async def test_get_agent_tools():
         assert isinstance(tools, list)
         assert len(tools) >= 1
 
-async def test_agent_schedule_lifecycle():
+async def test_post_agent_index():
+    async with _client() as client:
+        resp = await client.post("/agent/index", params={"path": "src/golden_agent/telemetry"})
+        assert resp.status_code == 200
+        assert resp.json()["indexed_chunks"] >= 1
+
+async def test_agent_schedule_lifecycle_and_404():
     async with _client() as client:
         create_resp = await client.post("/agent/schedule", json={"goal": "CI health check", "profile": "universal", "interval_seconds": 3600})
         assert create_resp.status_code == 200
@@ -38,14 +44,20 @@ async def test_agent_schedule_lifecycle():
         assert del_resp.status_code == 200
         assert del_resp.json()["deleted"] is True
 
-async def test_post_agent_run():
+        missing_resp = await client.delete("/agent/schedule/nonexistent-id")
+        assert missing_resp.status_code == 404
+
+async def test_post_agent_run_and_stream():
     mock_reply = LLMResponse(content="status ok", model_used="mock-model", provider="test", latency_ms=1.0)
     with patch.object(api_mod._orch.router, "complete", new=AsyncMock(return_value=mock_reply)):
         async with _client() as client:
             resp = await client.post("/agent/run", json={"goal": "Return status ok", "profile": "universal"})
             assert resp.status_code == 200
-            body = resp.json()
-            assert "status" in body
+            assert "status" in resp.json()
+
+            stream_resp = await client.post("/agent/stream", json={"goal": "Stream status ok", "profile": "universal"})
+            assert stream_resp.status_code == 200
+            assert "completed" in stream_resp.text
 
 async def test_all_discovered_get_endpoints():
     async with _client() as client:
