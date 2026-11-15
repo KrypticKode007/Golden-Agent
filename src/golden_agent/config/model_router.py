@@ -136,3 +136,22 @@ class ModelRouter:
             completion_tokens=int(usage.get("completion_tokens", 0)),
             cost_usd=0.0,
         )
+
+    @staticmethod
+    def extract_json(raw_text: str) -> Any:
+        """Safely extract JSON object or array from noisy LLM outputs or markdown code fences."""
+        import re
+        cleaned = raw_text.strip()
+        fence = re.search(r"```(?:json)?\s*([\s\(\S\)]*?)```", cleaned)
+        if fence:
+            cleaned = fence.group(1).strip()
+        try:
+            return json.loads(cleaned)
+        except json.JSONDecodeError:
+            pass
+        for opener, closer in [("{", "}"), ("[", "]")]:
+            start = cleaned.find(opener)
+            end = cleaned.rfind(closer)
+            if start != -1 and end != -1 and end > start:
+                return json.loads(cleaned[start : end + 1])
+        raise ValueError(f"Could not extract valid JSON from model response: {raw_text[:120]}")

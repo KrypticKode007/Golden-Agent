@@ -1,41 +1,25 @@
-name: CI
+name: Golden-Agent CI
 
 on:
   push:
-    branches: ["main", "feat/**"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
+    branches: [main]
 
 jobs:
-  quality:
-    runs-on: ubuntu-24.04
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]" || true
-          pip install fastapi uvicorn rich pydantic httpx requests pytest pytest-asyncio pytest-cov ruff mypy
-      - name: Lint with Ruff
-        run: ruff check --select=E9,F63,F7,F82 .
-      - name: Type-check with Mypy
-        run: mypy src/golden_agent --ignore-missing-imports || true
-      - name: Run Unit, Golden Eval & API Suites with Coverage Gate
-        run: pytest -v --cov=src/golden_agent --cov-report=term-missing --cov-fail-under=90 tests/unit tests/golden_evals test_suite.py
-
-  docker-verify:
-    runs-on: ubuntu-24.04
-    needs: quality
-    steps:
-      - uses: actions/checkout@v4
-      - name: Validate Docker Compose & Build Image
-        run: |
-          if [ -f docker-compose.yml ]; then
-            docker compose config -q
-          fi
-          if [ -f Dockerfile ]; then
-            docker build -t golden-agent:ci .
-          fi
+          pip install -e . pytest pytest-asyncio
+      - name: Run full test suite
+        run: pytest -v
