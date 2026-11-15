@@ -1,0 +1,25 @@
+from golden_agent.config.model_router import ModelRouter, ModelTier
+from golden_agent.config.settings import ExecutionMode, Settings
+from golden_agent.core.state import AgentState, SubTask, TaskStatus
+
+
+def test_model_router_modes() -> None:
+    local_settings = Settings(execution_mode=ExecutionMode.LOCAL)
+    local_router = ModelRouter(local_settings)
+    assert local_router.resolve_model(ModelTier.FRONTIER) == local_settings.tier3_local_model
+
+    hybrid_settings = Settings(execution_mode=ExecutionMode.HYBRID)
+    hybrid_router = ModelRouter(hybrid_settings)
+    assert hybrid_router.resolve_model(ModelTier.FAST) == hybrid_settings.tier1_local_model
+    assert hybrid_router.resolve_model(ModelTier.FRONTIER) == hybrid_settings.tier3_cloud_model
+
+
+def test_agent_state_initialization() -> None:
+    state = AgentState(goal="Build a REST API")
+    task = SubTask(title="Design schema", description="Create Pydantic models", assigned_worker="coder")
+    state.plan.append(task)
+
+    assert state.status == TaskStatus.PENDING
+    assert len(state.plan) == 1
+    assert state.plan[0].assigned_worker == "coder"
+  
