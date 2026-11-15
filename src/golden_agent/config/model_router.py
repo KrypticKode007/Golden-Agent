@@ -137,6 +137,43 @@ class ModelRouter:
             cost_usd=0.0,
         )
 
+
+    async def complete_with_retry(
+        self,
+        messages: list[dict[str, str]],
+        tier: ModelTier = ModelTier.STANDARD,
+        force_local: bool = False,
+        temperature: float = 0.2,
+        response_format: dict[str, Any] | None = None,
+        max_retries: int = 3,
+        base_delay: float = 0.2,
+    ) -> LLMResponse:
+        """Execute completion with exponential backoff on transient network or rate-limit errors."""
+        import asyncio
+        import urllib.error
+
+        last_exc: Exception | None = None
+        for attempt in range(max_retries):
+            try:
+                return await self.complete(
+                    messages=messages,
+                    tier=tier,
+                    force_local=force_local,
+                    temperature=temperature,
+                    response_format=response_format,
+                )
+            except urllib.error.HTTPError as exc:
+                if exc.code not in {408, 429, 500, 502, 503, 504} or attempt == max_retries - 1:
+                    raise
+                last_exc = exc
+            except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
+                if attempt == max_retries - 1:
+                    raise
+                last_exc = exc
+            await asyncio.sleep(base_delay * (2**attempt))
+        assert last_exc is not None
+        raise last_exc
+
     @staticmethod
     def extract_json(raw_text: str) -> Any:
         """Safely extract JSON object or array from noisy LLM outputs or markdown code fences."""

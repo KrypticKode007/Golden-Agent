@@ -43,3 +43,42 @@ def test_model_router_json_repair() -> None:
 
     with pytest.raises(ValueError):
         ModelRouter.extract_json("No structured data at all")
+
+
+@pytest.mark.asyncio
+async def test_model_router_exponential_retry(monkeypatch: pytest.MonkeyPatch) -> None:
+    import urllib.error
+    from golden_agent.config.model_router import LLMResponse
+
+    router = ModelRouter()
+    attempts = {"count": 0}
+
+    async def flaky_complete(*args, **kwargs) -> LLMResponse:
+        attempts["count"] += 1
+        if attempts["count"] < 3:
+            raise urllib.error.URLError("Temporary socket reset")
+        return LLMResponse(content="Recovered cleanly", model_used="ollama/qwen2.5:0.5b")
+
+    monkeypatch.setattr(router, "complete", flaky_complete)
+    res = await router.complete_with_retry([{"role": "user", "content": "ping"}], max_retries=3, base_delay=0.01)
+    assert res.content == "Recovered cleanly"
+    assert attempts["count"] == 3
+
+
+@pytest.mark.asyncio
+async def test_concurrent_rag_and_memory_stress(tmp_path) -> None:
+    import asyncio
+    from golden_agent.memory.episodic_store import EpisodicMemoryStore
+
+    store = EpisodicMemoryStore(tmp_path / "episodes.json")
+    idx = HybridCodeIndex()
+    idx.index_directory("src/golden_agent")
+
+    async def worker(i: int) -> int:
+        store.remember("stress", f"Completed edge node diagnostic #{i}", tags=["arm64", f"worker-{i}"])
+        hits = idx.search("ModelRouter resolve_model", top_k=3)
+        return len(hits)
+
+    results = await asyncio.gather(*(worker(i) for i in range(15)))
+    assert all(r > 0 for r in results)
+    assert len(store.recall("diagnostic", limit=20)) == 15

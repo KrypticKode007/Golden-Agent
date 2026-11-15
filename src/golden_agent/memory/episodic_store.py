@@ -1,3 +1,4 @@
+import operator
 from datetime import datetime, timezone
 import json
 from pathlib import Path
@@ -32,4 +33,4 @@ class EpisodicMemoryStore:
         if not terms:
             return self._items[-limit:]
         scored = [(sum(1 for t in terms if t in f"{e.category} {e.summary} {' '.join(e.tags)}".lower()), e) for e in self._items]
-        return [e for s, e in sorted(scored, key=lambda x: x, reverse=True) if s > 0][:limit]
+        return [e for s, e in sorted(scored, key=operator.itemgetter(0), reverse=True) if s > 0][:limit]
