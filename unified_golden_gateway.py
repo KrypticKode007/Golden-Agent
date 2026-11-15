@@ -1,8 +1,3 @@
-import sys as _boot_sys
-from pathlib import Path as _boot_Path
-_boot_src = str(_boot_Path(__file__).resolve().parent / 'src')
-if _boot_src not in _boot_sys.path:
-    _boot_sys.path.insert(0, _boot_src)
 import os
 import re
 import gc
@@ -193,26 +188,22 @@ async def startup_event():
 
 
 # --- Autonomous Multi-Agent Platform Mount ---
+import importlib.util as _ilu
 import sys as _sys
 from pathlib import Path as _Path
-_src = str(_Path(__file__).resolve().parent / 'src')
-if _src not in _sys.path:
-    _sys.path.insert(0, _src)
+
+_ga_dir = _Path(__file__).resolve().parent / "src" / "golden_agent"
+_spec = _ilu.spec_from_file_location("golden_agent", str(_ga_dir / "__init__.py"), submodule_search_locations=[str(_ga_dir)])
+_mod = _ilu.module_from_spec(_spec)
+_sys.modules["golden_agent"] = _mod
+_spec.loader.exec_module(_mod)
+
 from fastapi import Depends
 from access_key_token import verify_access_key_token
-import golden_agent as _ga
-if _src not in getattr(_ga, '__path__', []):
-    _ga.__path__.insert(0, _src)
-import golden_agent as _ga
-_ga_pkg = str(_Path(__file__).resolve().parent / 'src' / 'golden_agent')
-if hasattr(_ga, '__path__') and _ga_pkg not in _ga.__path__:
-    _ga.__path__.insert(0, _ga_pkg)
-for _k in [k for k in _sys.modules if k == 'golden_agent' or k.startswith('golden_agent.')]:
-    del _sys.modules[_k]
-if _src in _sys.path: _sys.path.remove(_src)
-_sys.path.insert(0, _src)
+_deps = [Depends(verify_access_key_token)]
 from golden_agent.interfaces.api import mount_onto
-mount_onto(app, dependencies=[Depends(verify_access_key_token)])
+
+mount_onto(app, dependencies=_deps)
 
 if __name__ == "__main__":
     import uvicorn
