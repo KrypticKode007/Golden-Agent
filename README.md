@@ -87,6 +87,6 @@ Golden-Agent is available under a **dual-licensing model**—open-source under G
 | **Custom MCP Connectors & Fine-Tuning** | Community GitHub Issues | Email Support (48h SLA) | Dedicated Solutions Engineer (4h SLA) |
 
 ### Documentation & Enterprise Inquiries
-* **Technical Docs & Architecture:** Browse [`docs/`](docs/), [`profiles/`](profiles/), and [`sdk/`](sdk/) in this repository.
+* **Technical Docs & Architecture:** Read the [System Architecture](docs/ARCHITECTURE.md), [REST & SSE API Reference](docs/API_REFERENCE.md), and [Enterprise Deployment & Licensing Guide](docs/ENTERPRISE.md), or browse [`profiles/`](profiles/) and [`sdk/`](sdk/).
 * **Commercial Licensing & Enterprise Support:** Open an issue tagged `enterprise` or contact **KrypticKode007** via GitHub.
 
