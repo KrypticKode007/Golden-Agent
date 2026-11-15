@@ -98,6 +98,16 @@ async def delete_schedule(job_id: str) -> dict[str, object]:
 def create_app() -> FastAPI:
     app = FastAPI(title="Golden-Agent Autonomous Platform", version="0.1.0")
     app.include_router(router)
+    existing = {getattr(r, "path", "") for r in app.routes}
+    if "/agent/run" not in existing:
+        app.add_api_route("/agent/tools", list_tools, methods=["GET"])
+        app.add_api_route("/agent/index", reindex_workspace, methods=["POST"])
+        app.add_api_route("/agent/approve/{approval_id}", approve_action, methods=["POST"])
+        app.add_api_route("/agent/run", run_agent, methods=["POST"])
+        app.add_api_route("/agent/stream", stream_agent, methods=["POST"])
+        app.add_api_route("/agent/schedules", list_schedules, methods=["GET"])
+        app.add_api_route("/agent/schedule", create_schedule, methods=["POST"])
+        app.add_api_route("/agent/schedule/{job_id}", delete_schedule, methods=["DELETE"])
     return app
 
 
