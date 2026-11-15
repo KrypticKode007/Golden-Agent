@@ -4,6 +4,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from golden_agent.core.orchestrator import MultiAgentOrchestrator
 from golden_agent.core.state import AgentState, TaskStatus
+from golden_agent.runtime.mcp_connectors import register_builtin_ecosystem_tools
 from golden_agent.runtime.sandbox import SandboxRunner
 
 router = APIRouter(prefix="/agent", tags=["golden-agent"])
@@ -17,6 +18,7 @@ async def _builtin_sandbox(args: dict[str, object]) -> str:
 
 
 _orch.tools.register_tool("run_sandbox_code", "Execute Python code in isolated sandbox", _builtin_sandbox)
+register_builtin_ecosystem_tools(_orch.tools, _orch.rag)
 
 
 class RunRequest(BaseModel):

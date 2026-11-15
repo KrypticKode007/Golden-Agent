@@ -1,0 +1,22 @@
+{
+  "servers": [
+    {
+      "name": "filesystem",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."],
+      "enabled": false
+    },
+    {
+      "name": "github",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "enabled": false
+    },
+    {
+      "name": "sqlite",
+      "command": "uvx",
+      "args": ["mcp-server-sqlite", "--db-path", ".golden_memory/agent.db"],
+      "enabled": false
+    }
+  ]
+}
