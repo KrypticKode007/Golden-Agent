@@ -7,6 +7,7 @@ from golden_agent.core.state import AgentState, TaskStatus
 from golden_agent.runtime.mcp_connectors import register_builtin_ecosystem_tools
 from golden_agent.workers.ecosystem_workers import register_kryptic_ecosystem_workers
 from golden_agent.runtime.sandbox import SandboxRunner
+from golden_agent.runtime.scheduler import AutonomousScheduler
 
 router = APIRouter(prefix="/agent", tags=["golden-agent"])
 _orch = MultiAgentOrchestrator()
@@ -21,6 +22,7 @@ async def _builtin_sandbox(args: dict[str, object]) -> str:
 _orch.tools.register_tool("run_sandbox_code", "Execute Python code in isolated sandbox", _builtin_sandbox)
 register_builtin_ecosystem_tools(_orch.tools, _orch.rag)
 register_kryptic_ecosystem_workers(_orch)
+_scheduler = AutonomousScheduler(_orch)
 
 
 class RunRequest(BaseModel):
@@ -61,6 +63,36 @@ async def stream_agent(req: RunRequest) -> StreamingResponse:
         yield f"data: {json.dumps({'event': 'completed', 'status': final.status, 'output': final.final_output})}\n\n"
 
     return StreamingResponse(_events(), media_type="text/event-stream")
+
+
+
+
+class ScheduleRequest(BaseModel):
+    goal: str
+    profile: str = "universal"
+    interval_seconds: int = 3600
+
+
+@router.get("/schedules")
+async def list_schedules() -> list[dict[str, object]]:
+    return [
+        j.model_dump(mode="json") if hasattr(j, "model_dump") else {"job_id": j.job_id, "goal": j.goal, "profile": j.profile, "interval_seconds": j.interval_seconds, "runs_completed": j.runs_completed, "last_status": j.last_status}
+        for j in _scheduler.jobs.values()
+    ]
+
+
+@router.post("/schedule")
+async def create_schedule(req: ScheduleRequest) -> dict[str, object]:
+    job = _scheduler.add_job(goal=req.goal, profile=req.profile, interval_seconds=req.interval_seconds)
+    return {"job_id": job.job_id, "goal": job.goal, "profile": job.profile, "interval_seconds": job.interval_seconds}
+
+
+@router.delete("/schedule/{job_id}")
+async def delete_schedule(job_id: str) -> dict[str, object]:
+    removed = _scheduler.remove_job(job_id)
+    if not removed:
+        raise HTTPException(status_code=404, detail="Schedule not found")
+    return {"deleted": True, "job_id": job_id}
 
 
 def create_app() -> FastAPI:
