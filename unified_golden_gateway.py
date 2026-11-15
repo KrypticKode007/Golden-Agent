@@ -205,6 +205,12 @@ from golden_agent.interfaces.api import mount_onto
 
 mount_onto(app, dependencies=_deps)
 
+from fastapi.responses import FileResponse as _FileResponse
+
+@app.get("/ui", include_in_schema=False)
+async def serve_autonomous_ui():
+    return _FileResponse("viewer.html")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8888)
