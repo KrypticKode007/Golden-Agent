@@ -25,7 +25,7 @@ Tested natively on Python 3.14 (ARM64, 2.6 GB RAM device):
 
 ### 1. Install
 ```bash
-git clone https://github.com
+git clone https://github.comKrypticKode007/Golden-Agent.git
 cd Golden-Agent
 pip install -e .
 ```
