@@ -48,7 +48,7 @@ class MultiAgentOrchestrator:
             {"role": "system", "content": f"You are the {task.assigned_worker} specialist. Execute the subtask concisely."},
             {"role": "user", "content": f"Goal: {state.goal}\nSubtask: {task.title} - {task.description}\nContext:\n{context_block}"},
         ]
-        resp = await self.router.complete(msgs, tier=tier)
+        resp = await self.router.complete_with_retry(msgs, tier=tier)
         state.total_tokens += resp.prompt_tokens + resp.completion_tokens
         state.total_cost_usd += resp.cost_usd
         return resp.content
@@ -61,7 +61,7 @@ class MultiAgentOrchestrator:
             {"role": "user", "content": state.goal},
         ]
         try:
-            resp = await self.router.complete(msgs, tier=ModelTier.FRONTIER, temperature=0.1)
+            resp = await self.router.complete_with_retry(msgs, tier=ModelTier.FRONTIER, temperature=0.1)
             state.total_tokens += resp.prompt_tokens + resp.completion_tokens
             state.total_cost_usd += resp.cost_usd
             raw_json = re.search(r"\[.*\]", resp.content, re.DOTALL)
